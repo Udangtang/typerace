@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Drop</title>
+<meta name="description" content="떨어지는 단어를 바닥에 닿기 전에 타이핑하세요. 한국어·영어 어휘를 만화 카드로 익히는 타자 게임">
+<meta name="theme-color" content="#fff4dc">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='7' fill='%23ffd23f' stroke='%231b1b1f' stroke-width='3'/%3E%3Cpath d='M16 7v13m-5-5 5 6 5-6' fill='none' stroke='%231b1b1f' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff4dc; --dot:rgba(27,27,31,.07);
+  --paper:#ffffff; --paper-2:#fffaf0;
+  --ink:#1b1b1f; --text:#1b1b1f; --muted:#6b6458;
+  --yellow:#ffd23f; --pink:#ff5d8f; --cyan:#3ec1d3; --green:#5fcf80; --purple:#9b7bff; --red:#ef3e36;
+  --sky-1:#bfe9ff; --sky-2:#eaf8ff; --ground:#7bd389; --ground-2:#4fae66;
+  --shadow:4px 4px 0 var(--ink);
+  --font-d:'Jua','Noto Sans KR',system-ui,sans-serif;
+  --font-b:'Noto Sans KR',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#17161d; --dot:rgba(255,255,255,.045);
+  --paper:#24232d; --paper-2:#2c2b37;
+  --ink:#5f5b78; --text:#f4f1ea; --muted:#a9a3b6;
+  --sky-1:#1d2a55; --sky-2:#34306a; --ground:#2f6e4a; --ground-2:#1f4f35;
+  --shadow:4px 4px 0 #000;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17161d; --dot:rgba(255,255,255,.045);
+    --paper:#24232d; --paper-2:#2c2b37;
+    --ink:#5f5b78; --text:#f4f1ea; --muted:#a9a3b6;
+    --sky-1:#1d2a55; --sky-2:#34306a; --ground:#2f6e4a; --ground-2:#1f4f35;
+    --shadow:4px 4px 0 #000;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg); background-image:radial-gradient(var(--dot) 1.4px, transparent 1.6px); background-size:14px 14px;
+  color:var(--text); font-family:var(--font-b); min-height:100vh; -webkit-font-smoothing:antialiased}
+button{font:inherit; color:inherit}
+[hidden]{display:none !important}
+:focus-visible{outline:3px solid var(--cyan); outline-offset:2px}
+
+/* header */
+.top{max-width:1240px; margin:0 auto; padding:14px 16px 0; display:flex; justify-content:space-between; align-items:center; gap:12px}
+.brand{display:flex; align-items:center; gap:10px}
+.logo{width:42px; height:42px; border-radius:11px; background:var(--yellow); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--ink); display:grid; place-items:center; flex:none}
+.brand-t{font-family:var(--font-d); font-size:25px; line-height:1; letter-spacing:.02em}
+.brand-t small{display:block; font-family:var(--font-b); font-size:12px; color:var(--muted); letter-spacing:0; margin-top:4px}
+.top-r{display:flex; gap:8px; align-items:center}
+@media (max-width:520px){ .brand-t{font-size:21px} .brand-t small{display:none} .dex-pill{padding:0 10px; font-size:14px} }
+.icon-btn{width:42px; height:42px; border-radius:11px; border:3px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 var(--ink);
+  display:grid; place-items:center; cursor:pointer; transition:transform .08s, box-shadow .08s}
+.icon-btn:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink)}
+.dex-pill{font-family:var(--font-d); font-size:15px; padding:0 14px; height:42px; display:flex; align-items:center; gap:8px; border-radius:11px;
+  border:3px solid var(--ink); background:var(--paper); box-shadow:3px 3px 0 var(--ink); white-space:nowrap}
+.dex-pill b{font-weight:400; color:var(--pink)}
+
+/* layout */
+.app{max-width:1240px; margin:0 auto; padding:16px; display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:20px; align-items:start}
+@media (max-width:980px){ .app{grid-template-columns:1fr} }
+
+/* stage */
+.stage{background:var(--paper); border:3px solid var(--ink); border-radius:18px; box-shadow:6px 6px 0 var(--ink); overflow:hidden; display:flex; flex-direction:column}
+.hud{display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:3px solid var(--ink); background:var(--paper-2); flex-wrap:wrap}
+.hearts{display:flex; gap:3px}
+.hearts svg{width:24px; height:24px; transition:transform .2s}
+.hearts svg.lost{transform:scale(.85); opacity:.35}
+.hearts svg.gain{animation:gain .5s}
+@keyframes gain{40%{transform:scale(1.45)}}
+.stat{display:flex; align-items:baseline; gap:6px; font-family:var(--font-d); font-size:15px; padding:4px 11px; border:2.5px solid var(--ink); border-radius:999px; background:var(--paper)}
+.stat span{color:var(--muted); font-size:12px; font-family:var(--font-b); font-weight:700}
+.stat b{font-weight:400; font-size:18px; font-variant-numeric:tabular-nums}
+.stat.combo b{color:var(--pink)}
+.hud .grow{flex:1}
+.pause-btn{height:34px; padding:0 12px; border-radius:9px; border:2.5px solid var(--ink); background:var(--paper); font-family:var(--font-d); font-size:14px; cursor:pointer; box-shadow:2px 2px 0 var(--ink)}
+.pause-btn:disabled{opacity:.4; cursor:default}
+
+.field{position:relative; height:clamp(420px, calc(100vh - 250px), 680px); overflow:hidden;
+  background:linear-gradient(180deg, var(--sky-1), var(--sky-2) 85%); user-select:none; -webkit-user-select:none; cursor:text}
+@media (max-width:980px){ .field{height:min(58vh, 560px)} }
+.cloud{position:absolute; width:120px; height:38px; background:rgba(255,255,255,.75); border-radius:40px; filter:blur(.2px)}
+.cloud::before,.cloud::after{content:''; position:absolute; background:inherit; border-radius:50%}
+.cloud::before{width:54px; height:54px; left:18px; top:-24px}
+.cloud::after{width:40px; height:40px; left:62px; top:-16px}
+:root[data-theme="dark"] .cloud{background:rgba(255,255,255,.08)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .cloud{background:rgba(255,255,255,.08)} }
+.c1{left:6%; top:12%; animation:drift 38s linear infinite}
+.c2{left:62%; top:26%; transform:scale(.75); animation:drift 52s linear infinite reverse}
+.c3{left:34%; top:52%; transform:scale(.55); opacity:.7; animation:drift 64s linear infinite}
+@keyframes drift{50%{translate:40px 0}}
+.ground{position:absolute; left:0; right:0; bottom:0; height:46px; background:var(--ground); border-top:3px solid var(--ink)}
+.ground::before{content:''; position:absolute; inset:8px 0 0; background:repeating-linear-gradient(90deg, var(--ground-2) 0 6px, transparent 6px 22px); opacity:.45}
+.field.hurt{animation:hurt .35s}
+@keyframes hurt{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+.field.hurt::after{content:''; position:absolute; inset:0; background:rgba(239,62,54,.18); pointer-events:none}
+
+.drop{position:absolute; left:0; top:0; will-change:transform; font-family:var(--font-d); font-size:22px; line-height:1; white-space:nowrap;
+  padding:8px 13px 7px; background:#fff; color:#1b1b1f; border:3px solid var(--ink); border-radius:12px; box-shadow:3px 3px 0 var(--ink)}
+.drop .typed{color:var(--pink)}
+.drop.target{background:#fff6c7; z-index:2}
+.drop.heart{background:#ffe1ea}
+.drop.heart::before{content:''; position:absolute; top:-11px; right:-10px; width:22px; height:22px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z' fill='%23ff5d8f' stroke='%231b1b1f' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.drop.danger{animation:wob .4s infinite}
+@keyframes wob{50%{rotate:-2deg}}
+.drop.pop{animation:pop .32s ease-out forwards; pointer-events:none}
+@keyframes pop{to{scale:1.5; opacity:0}}
+.drop.splat{background:#ffd0cd; animation:splat .5s ease-out forwards}
+@keyframes splat{to{scale:1.25 .6; opacity:0}}
+.float{position:absolute; font-family:var(--font-d); font-size:22px; color:var(--pink); -webkit-text-stroke:1px var(--ink); pointer-events:none; animation:up .8s ease-out forwards; z-index:3; white-space:nowrap}
+.float.life{color:#ff5d8f; font-size:26px}
+@keyframes up{to{translate:0 -46px; opacity:0}}
+.banner{position:absolute; left:50%; top:38%; translate:-50% -50%; font-family:var(--font-d); font-size:46px; color:var(--yellow); -webkit-text-stroke:2px var(--ink);
+  text-shadow:4px 4px 0 var(--ink); pointer-events:none; animation:ban 1.3s ease-out forwards; z-index:4; white-space:nowrap}
+@keyframes ban{0%{scale:.4; opacity:0}15%{scale:1.1; opacity:1}25%{scale:1}80%{opacity:1}100%{opacity:0; translate:-50% -70%}}
+
+.inputbar{display:flex; gap:10px; align-items:center; padding:12px; border-top:3px solid var(--ink); background:var(--paper-2)}
+.word-input{flex:1; min-width:0; height:52px; border:3px solid var(--ink); border-radius:12px; background:var(--paper); color:var(--text);
+  font-family:var(--font-d); font-size:22px; padding:0 16px; outline:none; box-shadow:inset 0 3px 0 rgba(0,0,0,.06)}
+.word-input:focus{border-color:var(--ink); box-shadow:0 0 0 4px rgba(62,193,211,.35)}
+.word-input.wrong{animation:hurt .3s; background:#ffe3e1; color:#1b1b1f}
+.word-input:disabled{opacity:.55}
+.hint{font-size:12.5px; color:var(--muted); white-space:nowrap}
+@media (max-width:560px){ .hint{display:none} }
+kbd{font-family:var(--font-b); font-size:11px; font-weight:700; padding:1px 6px; border:1.5px solid currentColor; border-radius:5px}
+
+/* overlays */
+.ov{position:absolute; inset:0; z-index:10; display:flex; padding:16px; background:rgba(255,244,220,.72); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); overflow:auto}
+:root[data-theme="dark"] .ov{background:rgba(23,22,29,.78)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .ov{background:rgba(23,22,29,.78)} }
+.ov-card{margin:auto; width:min(460px,100%); background:var(--paper); border:3px solid var(--ink); border-radius:18px; box-shadow:6px 6px 0 var(--ink); padding:24px; text-align:center}
+.ov-title{font-family:var(--font-d); font-size:clamp(34px,6vw,46px); line-height:1.05; margin:0 0 6px; color:var(--yellow); -webkit-text-stroke:2px var(--ink); text-shadow:4px 4px 0 var(--ink); letter-spacing:.02em}
+.ov-sub{color:var(--muted); font-size:14px; margin:10px 0 18px}
+.seg{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px}
+.seg button{border:3px solid var(--ink); background:var(--paper); border-radius:12px; padding:12px 8px; cursor:pointer; font-family:var(--font-d); font-size:20px; box-shadow:3px 3px 0 var(--ink); transition:transform .08s}
+.seg button small{display:block; font-family:var(--font-b); font-size:12px; color:var(--muted); margin-top:2px}
+.seg button[aria-pressed="true"]{background:var(--yellow); color:#1b1b1f}
+.seg button[aria-pressed="true"] small{color:#5a4a10}
+.seg button:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink)}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; padding:0 22px; border-radius:13px; border:3px solid var(--ink);
+  background:var(--pink); color:#fff; font-family:var(--font-d); font-size:21px; cursor:pointer; box-shadow:4px 4px 0 var(--ink); transition:transform .08s, box-shadow .08s}
+.btn:active{transform:translate(3px,3px); box-shadow:1px 1px 0 var(--ink)}
+.btn.wide{width:100%}
+.btn.ghost{background:var(--paper); color:var(--text)}
+.btn-row{display:flex; gap:10px; margin-top:12px}
+.btn-row .btn{flex:1; font-size:18px; padding:0 10px}
+.how{list-style:none; padding:0; margin:18px 0 0; text-align:left; display:grid; gap:8px; font-size:13.5px; color:var(--muted)}
+.how li{display:flex; gap:10px; align-items:flex-start}
+.how i{font-style:normal; flex:none; width:22px; height:22px; border-radius:50%; border:2px solid var(--ink); background:var(--cyan); color:#1b1b1f; display:grid; place-items:center; font-family:var(--font-d); font-size:13px}
+.best{margin-top:12px; font-size:13px; color:var(--muted)}
+.best b{font-family:var(--font-d); font-weight:400; font-size:16px; color:var(--text)}
+.res-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:16px 0 4px}
+.res{border:2.5px solid var(--ink); border-radius:12px; padding:10px; background:var(--paper-2)}
+.res > span{display:block; font-size:12px; color:var(--muted); font-weight:700}
+.res b{font-family:var(--font-d); font-weight:400; font-size:26px}
+.res.main{grid-column:1/-1; background:var(--yellow); color:#1b1b1f}
+.res.main > span{color:#5a4a10}
+.res.main b{font-size:40px}
+.newbest{display:inline-block; margin-left:6px; font-size:13px; font-family:var(--font-d); background:var(--pink); color:#fff; padding:2px 9px; border-radius:999px; border:2px solid var(--ink); vertical-align:middle}
+.ov-note{font-size:13px; color:var(--muted); margin-top:12px}
+
+/* panel */
+.panel{display:flex; flex-direction:column; gap:16px; position:sticky; top:16px}
+@media (max-width:980px){ .panel{position:static} }
+.box{background:var(--paper); border:3px solid var(--ink); border-radius:18px; box-shadow:6px 6px 0 var(--ink); overflow:hidden}
+.box-h{display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-bottom:3px solid var(--ink); background:var(--paper-2); font-family:var(--font-d); font-size:17px}
+.box-h small{font-family:var(--font-b); font-size:12px; color:var(--muted)}
+.card.new{animation:cardin .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes cardin{from{transform:scale(.92) rotate(-1.5deg); opacity:.3}}
+.toon{display:block; width:100%; height:auto; border-bottom:3px solid var(--ink); background:#fff}
+.card-body{padding:14px 16px 16px}
+.word-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.word{font-family:var(--font-d); font-size:32px; line-height:1.1}
+.pos{font-size:12px; font-weight:700; padding:3px 9px; border-radius:999px; border:2px solid var(--ink); color:#1b1b1f}
+.pos.n{background:var(--cyan)} .pos.a{background:var(--yellow)} .pos.v{background:#ffa3c0}
+.meaning{font-family:var(--font-d); font-size:18px; color:var(--pink); margin-top:4px}
+.def{margin:10px 0 0; font-size:14.5px; line-height:1.6}
+.ex{margin-top:12px; padding:11px 13px; border:2.5px dashed var(--ink); border-radius:12px; background:var(--paper-2); font-size:14.5px; line-height:1.65}
+.ex b{background:linear-gradient(transparent 55%, rgba(255,210,63,.75) 55%); font-weight:700}
+.ex .tr{display:block; margin-top:6px; color:var(--muted); font-size:13px}
+.ex-label{font-family:var(--font-d); font-size:13px; color:var(--muted); display:block; margin-bottom:3px}
+.empty{padding:34px 22px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6}
+.empty .big{font-family:var(--font-d); font-size:20px; color:var(--text); display:block; margin:10px 0 4px}
+.tabs{display:flex; gap:6px}
+.tab{border:2px solid var(--ink); background:var(--paper); border-radius:999px; padding:3px 11px; font-size:13px; font-family:var(--font-d); cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--ink); color:#fff}
+:root[data-theme="dark"] .tab[aria-pressed="true"]{background:var(--yellow); color:#1b1b1f}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .tab[aria-pressed="true"]{background:var(--yellow); color:#1b1b1f} }
+.chips{display:flex; flex-wrap:wrap; gap:7px; padding:12px 14px; max-height:190px; overflow:auto}
+.chip{border:2px solid var(--ink); background:var(--paper-2); border-radius:9px; padding:5px 10px; font-family:var(--font-d); font-size:15px; cursor:pointer; color:var(--text)}
+.chip:hover{background:var(--yellow); color:#1b1b1f}
+.chip.miss{background:#ffe3e1; color:#1b1b1f}
+.chip.on{background:var(--cyan); color:#1b1b1f}
+.chips .none{color:var(--muted); font-size:13px; padding:4px 0}
+.dexbar{padding:0 14px 14px}
+.dexbar .bar{height:12px; border:2px solid var(--ink); border-radius:999px; overflow:hidden; background:var(--paper-2)}
+.dexbar .bar i{display:block; height:100%; width:0; background:var(--green); transition:width .4s}
+.dexbar .lbl{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:6px}
+.name-field{text-align:left; margin-bottom:14px}
+.name-field label{display:block; font-family:var(--font-d); font-size:15px; margin-bottom:6px}
+.name-input{width:100%; height:48px; border:3px solid var(--ink); border-radius:12px; background:var(--paper-2); color:var(--text); font-family:var(--font-d); font-size:19px; padding:0 14px; outline:none}
+.name-input:focus{box-shadow:0 0 0 4px rgba(62,193,211,.35)}
+.name-field .err{display:none; color:var(--red); font-size:12.5px; margin-top:5px}
+.name-field.error .err{display:block}
+.name-field.error .name-input{border-color:var(--red); animation:hurt .3s}
+.rank-line{margin-top:10px; font-family:var(--font-d); font-size:17px; min-height:24px}
+.rank-line .muted{font-family:var(--font-b); font-size:13px; color:var(--muted)}
+.rank-line b{font-weight:400; color:var(--pink)}
+.mini-rank{list-style:none; margin:14px 0 0; padding:0; text-align:left; border-top:2px dashed var(--ink)}
+.rank{list-style:none; margin:0; padding:4px 14px 6px}
+.rank li, .mini-rank li{display:grid; grid-template-columns:34px minmax(0,1fr) auto auto; align-items:center; gap:8px; padding:8px 0; border-bottom:2px dashed color-mix(in srgb, var(--ink) 25%, transparent)}
+.rank li:last-child, .mini-rank li:last-child{border-bottom:0}
+.rank .nm, .mini-rank .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; font-size:14px}
+.rank .nm small, .mini-rank .nm small{display:block; font-weight:400; font-size:11.5px; color:var(--muted)}
+.rank .sc, .mini-rank .sc{font-family:var(--font-d); font-size:18px; font-variant-numeric:tabular-nums}
+.rank .medal, .mini-rank .medal{width:28px; height:28px; border-radius:50%; border:2.5px solid var(--ink); display:grid; place-items:center; font-family:var(--font-d); font-size:14px; background:var(--paper-2)}
+.medal.m1{background:#ffd23f; color:#1b1b1f} .medal.m2{background:#dfe4ec; color:#1b1b1f} .medal.m3{background:#f0b58a; color:#1b1b1f}
+.rank li.me{background:color-mix(in srgb, var(--cyan) 22%, transparent); border-radius:10px; padding-left:6px; padding-right:6px; margin:0 -6px}
+.rank .x{border:0; background:transparent; color:var(--muted); cursor:pointer; width:26px; height:26px; border-radius:7px; font-size:15px}
+.rank .x:hover{color:var(--red); background:rgba(239,62,54,.12)}
+.rank-empty{padding:16px 0 12px; color:var(--muted); font-size:13.5px; text-align:center; display:block !important}
+.rank-foot{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 14px 12px; font-size:12px; color:var(--muted); border-top:2px dashed color-mix(in srgb, var(--ink) 25%, transparent)}
+.net{display:inline-flex; align-items:center; gap:6px}
+.net::before{content:''; width:8px; height:8px; border-radius:50%; background:var(--muted)}
+.net[data-mode="online"]::before{background:var(--green)}
+.net[data-mode="local"]::before{background:#f5a524}
+.link-btn{border:2px solid var(--ink); background:var(--paper); border-radius:8px; padding:3px 9px; font-size:12px; font-family:var(--font-d); cursor:pointer; color:var(--text)}
+footer{max-width:1240px; margin:0 auto; padding:6px 16px 26px; color:var(--muted); font-size:12px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 3v13m-5.5-5 5.5 6.5 5.5-6.5" fill="none" stroke="#1b1b1f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="brand-t">WORD DROP<small>떨어지는 단어를 잡아라</small></div>
+  </div>
+  <div class="top-r">
+    <div class="dex-pill" title="지금까지 잡은 단어 수">도감 <b id="dexTop">0</b><span id="dexTopTotal">/ 45</span></div>
+    <button class="icon-btn" id="themeBtn" aria-label="테마 전환" title="테마 전환"></button>
+  </div>
+</header>
+
+<main class="app">
+  <section class="stage" aria-label="게임">
+    <div class="hud">
+      <div class="hearts" id="hearts" aria-label="남은 목숨"></div>
+      <div class="stat"><span>점수</span><b id="sScore">0</b></div>
+      <div class="stat combo"><span>콤보</span><b id="sCombo">0</b></div>
+      <div class="stat"><span>웨이브</span><b id="sWave">1</b></div>
+      <div class="grow"></div>
+      <button class="pause-btn" id="pauseBtn" disabled>일시정지 <kbd>Esc</kbd></button>
+    </div>
+
+    <div class="field" id="field">
+      <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+      <div id="drops"></div>
+      <div class="ground"></div>
+
+      <div class="ov" id="startOv">
+        <div class="ov-card">
+          <h1 class="ov-title">WORD DROP</h1>
+          <p class="ov-sub">하늘에서 단어가 쏟아진다! 바닥에 닿기 전에 타이핑해서 터뜨리세요.</p>
+          <div class="name-field" id="nameField">
+            <label for="nameInput">닉네임</label>
+            <input class="name-input" id="nameInput" maxlength="16" autocomplete="nickname" placeholder="랭킹에 표시될 이름">
+            <div class="err">닉네임을 입력해야 랭킹에 올라갈 수 있어요.</div>
+          </div>
+          <div class="seg" role="group" aria-label="언어 선택">
+            <button data-lang="ko" aria-pressed="true">한국어<small>우리말 어휘</small></button>
+            <button data-lang="en" aria-pressed="false">English<small>영어 단어 + 뜻</small></button>
+          </div>
+          <button class="btn wide" id="startBtn">게임 시작 <kbd style="border-color:#fff">Enter</kbd></button>
+          <div class="best" id="bestStart"></div>
+          <ol class="mini-rank" id="miniRank" hidden></ol>
+          <ul class="how">
+            <li><i>1</i><span>단어를 입력하면 팡! 한국어는 <kbd>Enter</kbd>·<kbd>Space</kbd>로 발사해요.</span></li>
+            <li><i>2</i><span>바닥에 닿으면 목숨 −1, 하트 달린 단어는 목숨 +1.</span></li>
+            <li><i>3</i><span>잡은 단어는 오른쪽에 뜻·예문·만화 카드로 쌓여요.</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ov" id="pauseOv" hidden>
+        <div class="ov-card">
+          <h2 class="ov-title" style="font-size:38px">PAUSE</h2>
+          <p class="ov-sub">잠깐 쉬어 가요. 오른쪽 단어 카드를 천천히 읽어 보세요.</p>
+          <button class="btn wide" id="resumeBtn">계속하기</button>
+          <div class="btn-row"><button class="btn ghost" id="quitBtn">그만하기</button></div>
+        </div>
+      </div>
+
+      <div class="ov" id="overOv" hidden>
+        <div class="ov-card">
+          <h2 class="ov-title" style="font-size:40px">GAME OVER</h2>
+          <div class="res-grid">
+            <div class="res main"><span>최종 점수</span><b id="rScore">0</b></div>
+            <div class="res"><span>잡은 단어</span><b id="rCaught">0</b></div>
+            <div class="res"><span>최고 콤보</span><b id="rCombo">0</b></div>
+            <div class="res"><span>정확도</span><b id="rAcc">0%</b></div>
+            <div class="res"><span>도달 웨이브</span><b id="rWave">1</b></div>
+          </div>
+          <div class="rank-line" id="rRank"></div>
+          <div class="best" id="bestOver"></div>
+          <div class="btn-row">
+            <button class="btn ghost" id="menuBtn">언어 바꾸기</button>
+            <button class="btn" id="againBtn">다시 하기</button>
+          </div>
+          <div class="ov-note">놓친 단어도 오른쪽 '놓친 단어' 탭에서 카드로 볼 수 있어요.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inputbar">
+      <input class="word-input" id="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="여기에 입력" aria-label="단어 입력" disabled>
+      <div class="hint" id="hint"><kbd>Enter</kbd> / <kbd>Space</kbd> 발사</div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <div class="box">
+      <div class="box-h">단어 카드 <small id="cardHint">잡으면 바로 나타나요</small></div>
+      <div id="card"></div>
+    </div>
+    <div class="box">
+      <div class="box-h">
+        <div class="tabs" role="group" aria-label="단어 목록">
+          <button class="tab" data-tab="caught" aria-pressed="true">잡은 단어 <span id="nCaught">0</span></button>
+          <button class="tab" data-tab="missed" aria-pressed="false">놓친 단어 <span id="nMissed">0</span></button>
+        </div>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="dexbar">
+        <div class="lbl"><span id="dexLbl">한국어 도감</span><span id="dexNum">0 / 45</span></div>
+        <div class="bar"><i id="dexBar"></i></div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-h">
+        <span>랭킹 보드</span>
+        <div class="tabs" role="group" aria-label="랭킹 언어">
+          <button class="tab" data-rank="ko" aria-pressed="true">한국어</button>
+          <button class="tab" data-rank="en" aria-pressed="false">English</button>
+        </div>
+      </div>
+      <ol class="rank" id="rankList"></ol>
+      <div class="rank-foot"><span class="net" id="netStatus" data-mode="pending">연결 중…</span><button class="link-btn" id="rankRefresh">새로고침</button></div>
+    </div>
+  </aside>
+</main>
+<footer>WORD DROP · 랭킹은 모든 플레이어와 공유되고, 도감은 이 브라우저에 저장됩니다</footer>
+
+<script>
+(() => {
+'use strict';
+
+/* =========================================================
+   WORDS
+   s: cartoon scene — bg, c(characters "preset:mood"), p(props), b(bubble), who(bubble speaker), fx
+   ========================================================= */
+const WORDS = {
+ko: [
+ // ---- 명사
+ {w:'광합성', p:'n', d:'식물이 빛을 이용해 물과 이산화 탄소로 양분을 만드는 과정.', e:'창가 화분은 하루 종일 **광합성**을 했고, 나는 하루 종일 낮잠만 잤다.', s:{bg:'room', c:['me:sleepy'], p:['🌿','☀️'], b:'나도 햇빛 충전 중…'}},
+ {w:'중력', p:'n', d:'지구가 물체를 끌어당기는 힘.', e:'토스트가 늘 잼 바른 쪽으로 떨어지는 건 분명 **중력**의 장난이다.', s:{bg:'kitchen', c:['me:shock'], p:['🍞'], b:'왜 항상 잼 쪽이야?!', fx:['speed']}},
+ {w:'마찰', p:'n', d:'두 물체가 맞닿아 움직일 때 그 움직임을 방해하는 힘.', e:'양말 신고 복도를 미끄러지던 동생은 그날 **마찰**의 소중함을 깨달았다.', s:{bg:'room', c:['sib:shock'], p:['🧦','💫'], b:'멈춰어어!', fx:['speed']}},
+ {w:'증발', p:'n', d:'액체가 기체로 변하여 날아가는 현상.', e:'내 용돈은 여름날 물웅덩이보다 빠르게 **증발**한다.', s:{bg:'street', c:['me:sad'], p:['💸','💰'], b:'어디 갔지…?'}},
+ {w:'가설', p:'n', d:'어떤 현상을 설명하기 위해 임시로 세운 생각.', e:'"고양이는 내가 숙제할 때만 공책 위에 눕는다"는 **가설**이 오늘도 증명되었다.', s:{bg:'room', c:['me:confused'], p:['🐱','📓'], b:'또 너야?'}},
+ {w:'증거', p:'n', d:'어떤 사실이 참임을 밝혀 주는 근거.', e:'입가에 묻은 초콜릿은 동생이 범인이라는 결정적 **증거**였다.', s:{bg:'room', c:['me:suspicious','sib:nervous'], p:['🍫','🔍'], b:'입에 묻었거든?'}},
+ {w:'실험', p:'n', d:'가설이 맞는지 실제로 해 보며 확인하는 일.', e:'콜라에 사탕을 넣는 **실험**은 대성공이었지만, 부엌 청소는 대실패였다.', s:{bg:'kitchen', c:['me:shock'], p:['🥤','💥'], b:'청소는 누가…?'}},
+ {w:'기후', p:'n', d:'한 지역에서 오랜 기간에 걸쳐 나타나는 평균적인 날씨.', e:'우리 교실의 **기후**는 에어컨 앞은 남극, 창가 자리는 사막이다.', s:{bg:'class', c:['friend:nervous','me:cry'], p:['❄️','🌵'], b:'여긴 사막이야…', who:1}},
+ {w:'민주주의', p:'n', d:'국민이 나라의 주인이 되어 나라의 일을 결정하는 정치 제도.', e:'급식 메뉴를 투표로 정하자 우리 반의 **민주주의**는 치킨 25표로 완성되었다.', s:{bg:'class', c:['friend:happy','me:happy'], p:['🗳️','🍗'], b:'치킨 만장일치!'}},
+ {w:'권리', p:'n', d:'어떤 일을 하거나 누릴 수 있는 정당한 자격.', e:'나는 리모컨 사용 **권리**를 주장했지만, 아빠의 야구 중계 앞에서 무너졌다.', s:{bg:'room', c:['dad:happy','me:sad'], p:['📺','⚾'], b:'9회 말이야~'}},
+ {w:'의무', p:'n', d:'마땅히 해야 하는 일.', e:'숙제는 학생의 **의무**라는데, 왜 내 숙제는 꼭 일요일 밤 11시에 생각날까.', s:{bg:'night', c:['me:shock'], p:['📚','⏰'], b:'내일 제출이었어?!', fx:['sweat']}},
+ {w:'인구', p:'n', d:'일정한 지역에 사는 사람의 수.', e:'점심시간 매점 앞의 **인구** 밀도는 출근길 지하철을 넘어선다.', s:{bg:'street', c:['friend:shock','me:nervous'], p:['🏪','🥐'], b:'밀지 마세요!'}},
+ {w:'소비', p:'n', d:'돈이나 물건, 시간 따위를 써서 없앰.', e:'이번 달 내 용돈 **소비**의 80%는 편의점 컵라면이었다.', s:{bg:'street', c:['me:proud'], p:['🍜','🧾'], b:'합리적 소비!'}},
+ {w:'전통', p:'n', d:'예로부터 이어져 내려오는 생활 방식이나 문화.', e:'명절마다 "공부는 잘하니?" 하고 물으시는 건 할아버지의 오랜 **전통**이다.', s:{bg:'room', c:['grandpa:happy','me:nervous'], p:['🍡'], b:'공부는 잘하니?'}},
+ {w:'유적', p:'n', d:'옛사람들이 남긴 건축물이나 물건이 있던 자리.', e:'내 책상 서랍 깊은 곳에서 작년 급식 우유라는 **유적**이 발굴되었다.', s:{bg:'room', c:['me:shock'], p:['🥛','🔦'], b:'이건… 작년 거?!'}},
+ {w:'갈등', p:'n', d:'생각이나 이해관계가 달라 서로 부딪침.', e:'탕수육에 소스를 부을지 찍을지를 두고 우리 가족은 깊은 **갈등**에 빠졌다.', s:{bg:'kitchen', c:['dad:angry','mom:angry'], p:['🥢'], b:'찍먹이지!', who:1}},
+ {w:'협동', p:'n', d:'서로 마음과 힘을 하나로 합함.', e:'조별 과제는 **협동**이라고 쓰고, 한 사람의 희생이라고 읽는다.', s:{bg:'class', c:['me:cry','friend:sleepy'], p:['📊'], b:'나만 하는 중…'}},
+ {w:'배려', p:'n', d:'다른 사람을 도와주고 보살펴 주려는 마음.', e:'마지막 남은 닭 다리를 양보하는 것, 그것이 진정한 **배려**다. 물론 아주 힘들다.', s:{bg:'kitchen', c:['me:cry','friend:love'], p:['🍗'], b:'…너 먹어.'}},
+ {w:'편견', p:'n', d:'공정하지 못하고 한쪽으로 치우친 생각.', e:'민트 초코는 치약 맛이라는 **편견**을 깬 사람은 우리 반에 아직 없다.', s:{bg:'street', c:['friend:happy','me:suspicious'], p:['🍨','🦷'], b:'먹어 봐, 맛있어!'}},
+ {w:'습관', p:'n', d:'오랫동안 되풀이하여 몸에 익은 행동.', e:'시험 기간만 되면 책상 정리부터 하는 **습관**이 있다. 공부는 정리 끝나고… 내일.', s:{bg:'room', c:['me:proud'], p:['🧹','📚'], b:'깨끗해졌다!'}},
+ {w:'상상력', p:'n', d:'실제로 없는 것을 머릿속으로 그려 보는 힘.', e:'숙제를 안 해 온 이유를 설명하는 동안 내 **상상력**은 최고 수준에 이르렀다.', s:{bg:'class', c:['teacher:suspicious','me:happy'], p:['🦖','🛸'], b:'공룡이 그만…', who:1}},
+ {w:'비유', p:'n', d:'어떤 것을 그와 비슷한 다른 것에 빗대어 표현하는 방법.', e:'"월요일 아침 내 몸은 물 먹은 솜이다"는 아주 정확한 **비유**다.', s:{bg:'room', c:['me:sleepy'], p:['☁️','💧'], b:'물 먹은 솜…'}},
+ {w:'속담', p:'n', d:'옛날부터 전해 오는, 교훈이 담긴 짧은 말.', e:'"세 살 버릇 여든까지 간다"는 **속담**을 알려 주자, 동생은 여든까지 게임하겠다고 했다.', s:{bg:'room', c:['sib:happy','me:shock'], p:['🎮'], b:'여든까지 할래!'}},
+ {w:'근거', p:'n', d:'주장이나 의견의 바탕이 되는 까닭.', e:'"오늘은 체육 해야 해요!"라는 주장의 **근거**는 "그냥요"였다.', s:{bg:'class', c:['teacher:suspicious','friend:nervous'], p:['⚽'], b:'근거는… 그냥요!', who:1}},
+ {w:'결론', p:'n', d:'생각이나 이야기를 마무리하며 내린 최종 판단.', e:'한 시간 동안 고민한 끝에 내린 **결론**은 "일단 밥부터 먹자"였다.', s:{bg:'kitchen', c:['me:proud'], p:['🍚','💡'], b:'일단 밥!'}},
+ // ---- 형용사
+ {w:'공정하다', p:'a', d:'어느 쪽으로도 치우치지 않고 올바르다.', e:'엄마는 피자를 **공정하게** 나눴지만, 치즈는 이상하게 동생 쪽으로 다 흘러내렸다.', s:{bg:'kitchen', c:['mom:happy','sib:smug'], p:['🍕'], b:'똑같이 나눴다~'}},
+ {w:'신중하다', p:'a', d:'매우 조심스럽다.', e:'마지막 젠가 블록을 빼는 친구의 손길은 외과 의사처럼 **신중했다**.', s:{bg:'class', c:['friend:nervous'], p:['🧱'], b:'숨 쉬지 마…'}},
+ {w:'성실하다', p:'a', d:'정성스럽고 참되다.', e:'우리 반에서 가장 **성실한** 학생은 한 번도 결석하지 않은… 교실 금붕어다.', s:{bg:'class', c:['me:proud'], p:['🐠','🏅'], b:'개근상 줘야 해!'}},
+ {w:'겸손하다', p:'a', d:'남을 존중하고 자기를 내세우지 않는 태도가 있다.', e:'100점 맞은 친구는 **겸손하게** "운이 좋았어"라고 했지만, 시험지는 세 번이나 보여 줬다.', s:{bg:'class', c:['friend:smug'], p:['💯'], b:'운이 좋았어~'}},
+ {w:'정직하다', p:'a', d:'마음에 거짓이나 꾸밈이 없이 바르다.', e:'"누가 화분 깼니?"라는 물음에 **정직한** 동생은 고양이를 가리켰다. 고양이는 억울했다.', s:{bg:'room', c:['mom:suspicious','sib:nervous'], p:['🪴','🐱'], b:'고양이가요!', who:1}},
+ {w:'풍부하다', p:'a', d:'넉넉하고 많다.', e:'할머니 댁 반찬은 언제나 **풍부해서** 밥 한 공기로는 도저히 감당이 안 된다.', s:{bg:'kitchen', c:['mom:happy','me:shock'], p:['🍱','🍚'], b:'더 먹어라~'}},
+ {w:'다양하다', p:'a', d:'모양이나 종류가 여러 가지로 많다.', e:'우리 반 단톡방 이모티콘은 **다양하지만**, 결국 모두 "ㅋㅋ"만 친다.', s:{bg:'class', c:['me:happy'], p:['📱','💬'], b:'ㅋㅋㅋㅋㅋ'}},
+ {w:'복잡하다', p:'a', d:'여러 가지가 얽혀 있어 어수선하다.', e:'이어폰 줄이 주머니 속에서 어떻게 그렇게 **복잡하게** 엉키는지는 과학의 미스터리다.', s:{bg:'street', c:['me:confused'], p:['🎧','🧶'], b:'이게 왜 묶여?'}},
+ {w:'단순하다', p:'a', d:'복잡하지 않고 간단하다.', e:'우리 강아지의 하루는 **단순하다**. 먹고, 자고, 내 양말을 숨긴다.', s:{bg:'room', c:['me:happy'], p:['🐶','🧦'], b:'또 숨겼지?'}},
+ {w:'적절하다', p:'a', d:'꼭 알맞다.', e:'선생님이 화나셨을 때 웃음이 터진 건 전혀 **적절하지** 않은 타이밍이었다.', s:{bg:'class', c:['teacher:angry','me:nervous'], p:['❗'], b:'…지금 웃었니?'}},
+ {w:'뚜렷하다', p:'a', d:'흐리거나 희미하지 않고 아주 분명하다.', e:'방학 동안 **뚜렷하게** 늘어난 건 키가 아니라 게임 레벨이었다.', s:{bg:'room', c:['me:proud'], p:['🎮','📏'], b:'레벨 99 달성!'}},
+ {w:'희미하다', p:'a', d:'또렷하지 않고 어렴풋하다.', e:'어제 외운 영어 단어들이 아침이 되자 **희미하게**만 떠올랐다.', s:{bg:'class', c:['me:confused'], p:['📖','💭'], b:'그 단어가 뭐였지…'}},
+ {w:'막연하다', p:'a', d:'뚜렷하지 못하고 아득하다.', e:'"크면 뭐든 되겠지"라는 내 장래 희망은 너무 **막연하다**고 엄마가 말씀하셨다.', s:{bg:'room', c:['mom:suspicious','me:happy'], p:['🌈'], b:'뭐든 되겠지~', who:1}},
+ {w:'무수하다', p:'a', d:'헤아릴 수 없을 만큼 많다.', e:'잠깐 휴대폰을 껐다 켜자 밤하늘의 별처럼 **무수한** 단톡방 알림이 쏟아졌다.', s:{bg:'night', c:['me:shock'], p:['📱','🔔'], b:'999+?!'}},
+ {w:'날카롭다', p:'a', d:'끝이 뾰족하거나, 감각이 매우 예민하다.', e:'과자 봉지 뜯는 소리를 감지하는 우리 강아지의 귀는 무척 **날카롭다**.', s:{bg:'kitchen', c:['me:nervous'], p:['🐶','🍪'], b:'(바스락…)'}},
+ {w:'고요하다', p:'a', d:'조용하고 잠잠하다.', e:'시험 직전의 교실은 너무 **고요해서** 내 배꼽시계 소리가 다 들렸다.', s:{bg:'class', c:['me:blush'], p:['📝'], b:'(꼬르륵…)'}},
+ {w:'너그럽다', p:'a', d:'마음이 넓어 남을 잘 이해하고 감싸 준다.', e:'할아버지는 **너그럽게** 웃으시며 내가 깬 화분이 "원래 금 가 있었다"고 하셨다.', s:{bg:'room', c:['grandpa:happy','me:cry'], p:['🪴'], b:'원래 금 가 있었어~'}},
+ {w:'냉정하다', p:'a', d:'감정에 휩쓸리지 않고 침착하다.', e:'게임에 지고 씩씩대는 동생 옆에서 고양이는 **냉정하게** 하품을 했다.', s:{bg:'room', c:['sib:angry'], p:['🐱'], b:'(고양이: 하암~)'}},
+ {w:'부족하다', p:'a', d:'필요한 양이나 기준에 미치지 못하다.', e:'잠은 늘 **부족하고**, 쉬는 시간은 늘 짧다.', s:{bg:'class', c:['me:sleepy'], p:['⏰'], b:'10분은 너무 짧아…'}},
+ {w:'유용하다', p:'a', d:'쓸모가 있다.', e:'수학 시간에 배운 계산이 가장 **유용했던** 순간은 떡볶이 값을 나눌 때였다.', s:{bg:'street', c:['friend:happy','me:proud'], p:['🧮','🍢'], b:'1인당 3,500원!', who:1}},
+ {w:'엄격하다', p:'a', d:'규칙이나 태도가 매우 엄하고 철저하다.', e:'우리 집 고양이는 밥시간에 아주 **엄격해서** 1분만 늦어도 항의한다.', s:{bg:'kitchen', c:['me:nervous'], p:['🐱','⏰'], b:'(고양이: 1분 늦었다)'}},
+ {w:'낯설다', p:'a', d:'전에 본 적이 없어 익숙하지 않다.', e:'새 학년 첫날, 모든 얼굴이 **낯설어서** 나는 필통만 계속 정리했다.', s:{bg:'class', c:['me:nervous','friend:nervous'], p:['✏️'], b:'(…안녕?)'}},
+ {w:'아늑하다', p:'a', d:'포근하고 편안하다.', e:'월요일 아침의 이불 속은 세상에서 가장 **아늑한** 장소다.', s:{bg:'room', c:['me:sleepy'], p:['🛏️'], b:'5분만 더…'}},
+ {w:'묵직하다', p:'a', d:'꽤 무겁다.', e:'새 학기 첫날 내 책가방은 교과서 때문에 바위처럼 **묵직했다**.', s:{bg:'street', c:['me:nervous'], p:['🎒','📚'], b:'허리야…'}},
+ {w:'엉성하다', p:'a', d:'짜임새가 없고 허술하다.', e:'내가 접은 종이비행기는 너무 **엉성해서** 날자마자 바로 추락했다.', s:{bg:'class', c:['friend:happy','me:sad'], p:['✈️'], b:'…추락했다.', who:1}},
+ // ---- 동사
+ {w:'관찰하다', p:'v', d:'사물이나 현상을 주의 깊게 자세히 살펴보다.', e:'강낭콩을 일주일째 **관찰하던** 나는 아무 변화가 없자 콩에게 말을 걸기 시작했다.', s:{bg:'room', c:['me:confused'], p:['🌱','🔍'], b:'콩아, 일어나…'}},
+ {w:'비교하다', p:'v', d:'둘 이상의 것을 견주어 같은 점과 다른 점을 살피다.', e:'엄마는 나를 옆집 아이와 **비교하시지만**, 나는 절대 엄마를 옆집 엄마와 비교하지 않는다. (아직은.)', s:{bg:'room', c:['mom:angry','me:nervous'], p:['🏠'], b:'옆집 애는 말이야~'}},
+ {w:'분류하다', p:'v', d:'종류에 따라 나누다.', e:'과자를 맛별로 **분류하던** 동생은 정리가 끝나기도 전에 다 먹어 버렸다.', s:{bg:'room', c:['sib:happy'], p:['🍪','🍬','🍫'], b:'이건 단맛~'}},
+ {w:'예측하다', p:'v', d:'앞으로 일어날 일을 미리 헤아려 짐작하다.', e:'일기 예보는 맑음이라고 **예측했지만**, 내가 우산을 두고 나온 날엔 꼭 비가 온다.', s:{bg:'street', c:['me:cry'], p:['☔','🌧️'], b:'맑음이라며…'}},
+ {w:'요약하다', p:'v', d:'말이나 글의 중요한 내용만 간추리다.', e:'세 시간짜리 영화를 **요약해** 달라고 하자 친구는 "다 터졌어"라고 했다.', s:{bg:'street', c:['friend:happy','me:confused'], p:['🎬','💥'], b:'다 터졌어!'}},
+ {w:'주장하다', p:'v', d:'자기 의견을 굳게 내세우다.', e:'동생은 브로콜리가 작은 나무라서 먹으면 안 된다고 **주장했다**.', s:{bg:'kitchen', c:['sib:angry','mom:suspicious'], p:['🥦'], b:'나무는 못 먹어!'}},
+ {w:'설득하다', p:'v', d:'여러 가지로 말하여 상대가 따르도록 하다.', e:'강아지를 키우자고 부모님을 **설득하는** 데 발표 자료 20장이 필요했다.', s:{bg:'room', c:['me:proud','dad:confused'], p:['📊','🐶'], b:'근거 3번 보시죠!'}},
+ {w:'증명하다', p:'v', d:'어떤 사실이 참임을 근거를 들어 밝히다.', e:'늦잠을 자도 지각하지 않을 수 있다는 걸 **증명하려다** 결국 지각했다.', s:{bg:'street', c:['me:shock'], p:['⏰','🏫'], b:'증명 실패!', fx:['speed']}},
+ {w:'탐구하다', p:'v', d:'원리나 진리를 깊이 파고들어 연구하다.', e:'냉장고 문을 닫으면 정말 불이 꺼지는지 **탐구하려고** 동생은 냉장고에 들어가려 했다.', s:{bg:'kitchen', c:['sib:smug','mom:shock'], p:['🧊','🔦'], b:'직접 확인해 볼게!'}},
+ {w:'협력하다', p:'v', d:'힘을 합하여 서로 돕다.', e:'우리 형제는 평소엔 싸우지만, 엄마 몰래 라면을 끓일 때만큼은 완벽하게 **협력한다**.', s:{bg:'night', c:['me:smug','sib:smug'], p:['🍜'], b:'쉿, 물 끓는다'}},
+ {w:'존중하다', p:'v', d:'높이어 귀하게 대하다.', e:'나는 고양이의 공간을 **존중하지만**, 고양이는 내 키보드를 존중하지 않는다.', s:{bg:'room', c:['me:sad'], p:['🐱','⌨️'], b:'거기 내 자리야…'}},
+ {w:'극복하다', p:'v', d:'어려움이나 나쁜 조건을 이겨 내다.', e:'오이를 싫어하는 나는 김밥 속 오이를 **극복하기** 위해 눈을 꼭 감고 씹었다.', s:{bg:'kitchen', c:['me:nervous'], p:['🥒','🍙'], b:'할 수 있다…!'}},
+ {w:'반성하다', p:'v', d:'자기의 말이나 행동을 돌이켜 보다.', e:'새벽 2시에 라면을 먹은 나는 아침에 퉁퉁 부은 얼굴을 보며 깊이 **반성했다**.', s:{bg:'room', c:['me:sad'], p:['🍜'], b:'거울 속 누구세요…?'}},
+ {w:'기록하다', p:'v', d:'나중에 남기기 위해 적다.', e:'건강 일기를 꼬박꼬박 **기록했더니**, 대부분이 "오늘도 치킨"이었다.', s:{bg:'room', c:['me:blush'], p:['📓','🍗'], b:'오늘도 치킨…'}},
+ {w:'절약하다', p:'v', d:'함부로 쓰지 않고 꼭 필요한 데만 써서 아끼다.', e:'용돈을 **절약하려고** 편의점을 피해 돌아갔는데, 문구점에서 다 써 버렸다.', s:{bg:'street', c:['me:shock'], p:['💰','✏️'], b:'여기서 털렸다…'}},
+ {w:'보존하다', p:'v', d:'잘 보호하고 간수하여 남기다.', e:'나는 1학년 때 받은 상장을 코팅까지 해서 소중히 **보존하고** 있다. 참가상이다.', s:{bg:'room', c:['me:proud'], p:['📜'], b:'참가상이지만!'}},
+ {w:'발표하다', p:'v', d:'여러 사람 앞에서 생각이나 결과를 알리다.', e:'앞에 나가 **발표하는** 동안 내 목소리는 염소처럼 떨렸다.', s:{bg:'class', c:['me:nervous'], p:['🎤','🐐'], b:'저, 저희 조는…'}},
+ {w:'토론하다', p:'v', d:'여러 사람이 각자의 의견을 내세워 논의하다.', e:'우리 반은 "짜장 대 짬뽕"을 주제로 한 시간 동안 뜨겁게 **토론했다**.', s:{bg:'class', c:['friend:angry','me:angry'], p:['🍜','🌶️'], b:'짜장이 진리다!'}},
+ {w:'추론하다', p:'v', d:'알고 있는 사실을 바탕으로 다른 사실을 미루어 생각하다.', e:'식탁 위 빈 접시와 웃고 있는 강아지를 보고 나는 범인을 **추론했다**.', s:{bg:'kitchen', c:['me:suspicious'], p:['🍽️','🐶'], b:'범인은 너다!'}},
+ {w:'해석하다', p:'v', d:'말이나 글, 행동의 뜻을 이해하여 풀다.', e:'엄마의 "알아서 해"가 "하지 마"라는 뜻으로 **해석된다는** 걸 깨닫는 데 15년이 걸렸다.', s:{bg:'room', c:['mom:smug','me:confused'], p:['💬'], b:'알아서 해~'}},
+ {w:'실천하다', p:'v', d:'생각한 것을 실제로 행하다.', e:'"하루 30분 운동"을 **실천하려고** 운동복까지 샀지만, 그 운동복은 잠옷이 되었다.', s:{bg:'room', c:['me:sleepy'], p:['👕','🛏️'], b:'내일부터 진짜…'}},
+ {w:'짐작하다', p:'v', d:'사정이나 형편을 대강 헤아려 생각하다.', e:'현관에서 내 이름을 부르는 엄마 목소리 크기로 오늘 분위기를 **짐작할** 수 있다.', s:{bg:'room', c:['me:nervous'], p:['🚪','🔊'], b:'…큰일 났다.'}},
+ {w:'확인하다', p:'v', d:'틀림없는지 알아보거나 인정하다.', e:'문을 잠갔는지 **확인하려고** 세 번이나 돌아갔는데, 결국 열쇠를 안에 두고 나왔다.', s:{bg:'street', c:['me:shock'], p:['🔑','🚪'], b:'열쇠는…?'}},
+ {w:'집중하다', p:'v', d:'한 가지 일에 모든 힘을 쏟다.', e:'공부는 5분도 못 버티는데, 게임에는 다섯 시간 동안 **집중할** 수 있다.', s:{bg:'night', c:['me:proud'], p:['🎮','⏰'], b:'한 판만 더!'}},
+ {w:'견디다', p:'v', d:'어려움이나 괴로움을 참고 버티다.', e:'양치 직후 마시는 오렌지 주스의 맛을 **견디는** 건 진정한 용기다.', s:{bg:'kitchen', c:['me:cry'], p:['🦷','🧃'], b:'으엑…'}}
+],
+en: [
+ // ---- nouns
+ {w:'excuse', p:'n', m:'변명, 핑계', d:'A reason you give to avoid blame for something.', e:'“My dog ate my homework” is a great **excuse** — except I only have a goldfish.', t:'"강아지가 숙제를 먹었어요"는 훌륭한 핑계다. 우리 집엔 금붕어밖에 없다는 것만 빼면.', s:{bg:'class', c:['teacher:suspicious','me:nervous'], p:['🐠','📄'], b:'The dog ate it!', who:1}},
+ {w:'rumor', p:'n', m:'소문', d:'A story that spreads from person to person and may not be true.', e:'There’s a **rumor** that the cafeteria pizza is secretly made of cardboard.', t:'급식 피자가 사실 골판지로 만들어진다는 소문이 돌고 있다.', s:{bg:'class', c:['friend:smug','me:shock'], p:['🍕','📦'], b:'Psst… cardboard!'}},
+ {w:'appetite', p:'n', m:'식욕', d:'The feeling of wanting to eat.', e:'My **appetite** vanishes during math class and returns at exactly 12:00.', t:'내 식욕은 수학 시간에 사라졌다가 정확히 12시에 돌아온다.', s:{bg:'kitchen', c:['me:love'], p:['🍔','⏰'], b:'Lunch time!!'}},
+ {w:'nap', p:'n', m:'낮잠', d:'A short sleep during the day.', e:'I took a five-minute **nap** and woke up three hours later.', t:'5분만 낮잠을 잤는데 눈 떠 보니 세 시간이 지나 있었다.', s:{bg:'room', c:['me:sleepy'], p:['🛋️','⏰'], b:'Just 5 minutes…'}},
+ {w:'chaos', p:'n', m:'대혼란', d:'A state of complete confusion and disorder.', e:'The moment the teacher left, the classroom turned into total **chaos**.', t:'선생님이 나가는 순간, 교실은 완전한 대혼란에 빠졌다.', s:{bg:'class', c:['friend:happy','sib:shock'], p:['✈️','📄','🎒'], b:'Freedom!!', fx:['speed']}},
+ {w:'disguise', p:'n', m:'변장', d:'Clothes or things that hide who you really are.', e:'My cat’s **disguise** was a paper bag, but his tail gave him away.', t:'우리 고양이는 종이봉투로 변장했지만, 꼬리 때문에 다 들통났다.', s:{bg:'room', c:['me:suspicious'], p:['🐱','🛍️'], b:'Nice try, cat.'}},
+ {w:'rival', p:'n', m:'경쟁자, 라이벌', d:'Someone you compete against.', e:'My toughest **rival** in the lunch line is a first grader who runs like a cheetah.', t:'급식 줄에서 가장 강력한 라이벌은 치타처럼 달리는 1학년이다.', s:{bg:'street', c:['me:angry','sib:smug'], p:['🍱'], b:'Not today!', fx:['speed']}},
+ {w:'hiccup', p:'n', m:'딸꾹질', d:'A sudden sound from your throat that you cannot control.', e:'I got the **hiccups** right in the middle of my class presentation.', t:'반 친구들 앞에서 발표하는 도중에 딸꾹질이 시작됐다.', s:{bg:'class', c:['me:shock'], p:['🎤'], b:'And so— HIC!'}},
+ {w:'nightmare', p:'n', m:'악몽', d:'A very frightening dream.', e:'In my **nightmare**, the exam had 100 questions and all of them were in Latin.', t:'악몽 속에서 시험 문제는 100개였고, 전부 라틴어였다.', s:{bg:'night', c:['me:shock'], p:['📝','👻'], b:'Question 99?!', fx:['sweat']}},
+ {w:'leftover', p:'n', m:'남은 음식', d:'Food that remains after a meal is finished.', e:'Dad calls **leftovers** “a second chance for yesterday’s dinner.”', t:'아빠는 남은 음식을 "어제 저녁의 두 번째 기회"라고 부른다.', s:{bg:'kitchen', c:['dad:happy'], p:['🍲','🥡'], b:'Round two!'}},
+ {w:'gossip', p:'n', m:'뒷소문, 수다', d:'Talk about other people’s private lives.', e:'The class **gossip** knew about my birthday party before I did.', t:'반의 소문 대장은 내 생일 파티 소식을 나보다 먼저 알고 있었다.', s:{bg:'class', c:['friend:smug','me:confused'], p:['🎂','📱'], b:'I heard…'}},
+ {w:'coward', p:'n', m:'겁쟁이', d:'Someone who is easily scared.', e:'My brother says he isn’t a **coward**, but he sleeps with the lights on because of a moth.', t:'형은 자기가 겁쟁이가 아니라고 하지만, 나방 한 마리 때문에 불을 켜고 잔다.', s:{bg:'night', c:['friend:shock'], p:['💡','🦋'], b:'It’s staring at me!', fx:['sweat']}},
+ {w:'genius', p:'n', m:'천재', d:'A person who is extremely smart or skilled.', e:'My little sister is a **genius** at finding the snacks I hide.', t:'여동생은 내가 숨긴 간식을 찾아내는 데 천재다.', s:{bg:'room', c:['sib:smug'], p:['🍫','🔍'], b:'Found it!', fx:['sparkle']}},
+ {w:'deadline', p:'n', m:'마감 기한', d:'The time by which something must be finished.', e:'I work best under pressure, so I start projects five minutes before the **deadline**.', t:'나는 압박 속에서 잘하는 편이라, 과제를 마감 5분 전에 시작한다.', s:{bg:'night', c:['me:shock'], p:['⏰','💻'], b:'5 minutes left!', fx:['speed','sweat']}},
+ {w:'ambition', p:'n', m:'야망, 포부', d:'A strong wish to achieve something.', e:'My **ambition** is to become a professional sleeper.', t:'내 꿈은 프로 잠꾸러기가 되는 것이다.', s:{bg:'room', c:['me:proud'], p:['🛏️','🏆'], b:'Dream big!', fx:['sparkle']}},
+ // ---- adjectives
+ {w:'awkward', p:'a', m:'어색한', d:'Uncomfortable or embarrassing.', e:'It was **awkward** when I waved back at someone who was waving at the person behind me.', t:'뒷사람에게 손 흔드는 사람에게 내가 손 흔들어 답했을 때 정말 어색했다.', s:{bg:'street', c:['me:blush'], p:['👋'], b:'Oh… not me.'}},
+ {w:'stubborn', p:'a', m:'고집 센', d:'Refusing to change your mind.', e:'Grandpa is so **stubborn** that he argued with the GPS for twenty minutes.', t:'할아버지는 너무 고집이 세서 내비게이션과 20분 동안 말다툼을 하셨다.', s:{bg:'street', c:['grandpa:angry'], p:['🚗','🗺️'], b:'Turn left? NEVER.'}},
+ {w:'clumsy', p:'a', m:'서투른, 덜렁대는', d:'Often dropping things or bumping into things.', e:'I’m so **clumsy** that I once tripped over absolutely nothing.', t:'나는 너무 덜렁대서 아무것도 없는 곳에서 넘어진 적도 있다.', s:{bg:'street', c:['me:shock'], p:['💫','🍦'], b:'Whoa—!', fx:['speed']}},
+ {w:'suspicious', p:'a', m:'수상한', d:'Making you feel that something is wrong.', e:'My brother offering to wash the dishes is extremely **suspicious**.', t:'형이 먼저 설거지를 하겠다고 하는 건 너무 수상하다.', s:{bg:'kitchen', c:['me:suspicious'], p:['🍽️','🔍'], b:'What did you break?'}},
+ {w:'curious', p:'a', m:'호기심 많은', d:'Wanting to know or learn about something.', e:'Our **curious** cat pressed every single button on the remote.', t:'호기심 많은 우리 고양이는 리모컨 버튼을 하나도 빠짐없이 다 눌렀다.', s:{bg:'room', c:['me:shock'], p:['🐱','📺'], b:'Who ordered 9 pizzas?', fx:['question']}},
+ {w:'jealous', p:'a', m:'질투하는', d:'Upset because someone has something you want.', e:'My dog gets **jealous** every time I hug the cat.', t:'내가 고양이를 안아 줄 때마다 우리 강아지는 질투한다.', s:{bg:'room', c:['me:love'], p:['🐶','🐱'], b:'(dog: Hmph!)'}},
+ {w:'gigantic', p:'a', m:'거대한', d:'Extremely large.', e:'The “small” pizza at that restaurant was absolutely **gigantic**.', t:'그 식당의 "스몰" 피자는 정말 어마어마하게 컸다.', s:{bg:'kitchen', c:['me:shock'], p:[{e:'🍕', x:225, y:196, s:96}], b:'This is SMALL?!'}},
+ {w:'ridiculous', p:'a', m:'터무니없는, 우스꽝스러운', d:'Very silly or unreasonable.', e:'Mom says taking photos of every meal is **ridiculous** — while taking a photo of her salad.', t:'엄마는 매 끼니 사진 찍는 건 우스꽝스럽다고 하신다. 샐러드 사진을 찍으시면서.', s:{bg:'kitchen', c:['mom:happy'], p:['🥗','📸'], b:'Just one more!'}},
+ {w:'nervous', p:'a', m:'긴장한', d:'Worried and a little afraid.', e:'I was so **nervous** before my speech that I said “Good night” at 9 a.m.', t:'발표 전에 너무 긴장한 나머지 아침 9시에 "안녕히 주무세요"라고 해 버렸다.', s:{bg:'class', c:['me:nervous'], p:['🎤'], b:'Good night, everyone!'}},
+ {w:'drowsy', p:'a', m:'졸린', d:'Feeling sleepy and tired.', e:'A warm classroom right after lunch makes everyone **drowsy**.', t:'점심 직후의 따뜻한 교실은 모두를 졸리게 만든다.', s:{bg:'class', c:['me:sleepy','friend:sleepy'], p:['☀️'], b:'zz… yes, sir…'}},
+ {w:'generous', p:'a', m:'너그러운, 후한', d:'Happy to give things to other people.', e:'My **generous** friend gave me half of his sandwich — the half without any ham.', t:'후한 내 친구는 샌드위치 반쪽을 줬다. 햄이 하나도 없는 쪽으로.', s:{bg:'class', c:['friend:proud','me:confused'], p:['🥪'], b:'Sharing is caring!'}},
+ {w:'grumpy', p:'a', m:'심술 난, 투덜대는', d:'In a bad mood and easily annoyed.', e:'Dad is **grumpy** every morning until his first cup of coffee.', t:'아빠는 매일 아침 첫 커피를 마시기 전까지 심술이 나 있다.', s:{bg:'kitchen', c:['dad:angry'], p:['☕'], b:'Don’t. Talk. Yet.'}},
+ {w:'sticky', p:'a', m:'끈적끈적한', d:'Covered in something that sticks to other things.', e:'After the cotton candy, my hands stayed **sticky** for the rest of the day.', t:'솜사탕을 먹은 뒤로 내 손은 하루 종일 끈적거렸다.', s:{bg:'street', c:['me:nervous'], p:['🍭','✋'], b:'Help, I’m stuck!'}},
+ {w:'embarrassed', p:'a', m:'창피한, 당황한', d:'Feeling shy or ashamed in front of others.', e:'I was **embarrassed** when my stomach growled during the silent test.', t:'조용한 시험 시간에 배에서 꼬르륵 소리가 나서 너무 창피했다.', s:{bg:'class', c:['me:blush'], p:['📝'], b:'(grrrrr…)'}},
+ {w:'brave', p:'a', m:'용감한', d:'Willing to face danger without fear.', e:'My **brave** little brother fought a spider — with a slipper and a lot of screaming.', t:'용감한 내 남동생은 거미와 싸웠다. 슬리퍼 한 짝과 엄청난 비명으로.', s:{bg:'room', c:['sib:shock'], p:['🕷️','🩴'], b:'AAAAH!', fx:['speed']}},
+ // ---- verbs
+ {w:'sneeze', p:'v', m:'재채기하다', d:'To blow air out of your nose and mouth suddenly.', e:'I **sneezed** so hard that my homework flew off the desk.', t:'재채기를 너무 세게 해서 숙제가 책상 밖으로 날아갔다.', s:{bg:'class', c:['me:shock'], p:['📄','💨'], b:'ACHOO!', fx:['speed']}},
+ {w:'whisper', p:'v', m:'속삭이다', d:'To speak very quietly.', e:'My friend **whispered** the answer so loudly that the teacher heard it.', t:'친구가 답을 너무 크게 속삭여서 선생님도 들으셨다.', s:{bg:'class', c:['friend:happy','me:nervous'], p:['🤫'], b:'IT’S B!!'}},
+ {w:'stumble', p:'v', m:'발을 헛디디다', d:'To nearly fall while walking.', e:'I **stumbled** on the stairs and pretended it was a dance move.', t:'계단에서 발을 헛디뎠는데, 춤 동작인 척했다.', s:{bg:'street', c:['me:proud'], p:['🎶','💃'], b:'Totally on purpose.', fx:['sparkle']}},
+ {w:'pretend', p:'v', m:'~인 척하다', d:'To act as if something is true when it is not.', e:'I **pretended** to be asleep so I wouldn’t have to take out the trash.', t:'쓰레기 버리기 싫어서 자는 척했다.', s:{bg:'room', c:['mom:suspicious','me:sleepy'], p:['🗑️'], b:'(fake snore)', who:1}},
+ {w:'exaggerate', p:'v', m:'과장하다', d:'To make something sound bigger or better than it is.', e:'My cousin always **exaggerates** — a tiny fish becomes a shark by dinnertime.', t:'사촌은 늘 과장한다. 작은 물고기가 저녁때쯤엔 상어가 된다.', s:{bg:'street', c:['friend:proud'], p:['🐟','🦈'], b:'It was THIS big!'}},
+ {w:'ignore', p:'v', m:'무시하다', d:'To pay no attention to someone or something.', e:'My cat **ignores** me all day, then loves me very much at 4 a.m.', t:'우리 고양이는 하루 종일 나를 무시하다가 새벽 4시에만 나를 엄청 사랑한다.', s:{bg:'night', c:['me:sleepy'], p:['🐱','🍽️'], b:'(cat: FEED ME.)'}},
+ {w:'borrow', p:'v', m:'빌리다', d:'To take something and promise to give it back later.', e:'He **borrowed** my eraser in March and gave it back in December — half the size.', t:'그는 3월에 내 지우개를 빌려 가서 12월에 돌려줬다. 반 토막 난 채로.', s:{bg:'class', c:['friend:happy','me:shock'], p:['🧽','📅'], b:'Thanks a lot!'}},
+ {w:'complain', p:'v', m:'불평하다', d:'To say that you are unhappy or annoyed about something.', e:'My sister **complained** about the rain, then complained about the sun.', t:'언니는 비가 온다고 불평하더니, 해가 뜨자 또 불평했다.', s:{bg:'street', c:['sib:angry'], p:['☔','☀️'], b:'Too sunny now!'}},
+ {w:'panic', p:'v', m:'당황하다, 겁에 질리다', d:'To suddenly feel so afraid that you can’t think clearly.', e:'Everyone **panicked** when the teacher wrote “GROUP PROJECT” on the board.', t:'선생님이 칠판에 "조별 과제"라고 쓰자 모두가 공포에 빠졌다.', s:{bg:'class', c:['me:shock','friend:shock'], p:['📝'], b:'Not again!', fx:['speed']}},
+ {w:'snore', p:'v', m:'코를 골다', d:'To make loud breathing noises while sleeping.', e:'Grandpa **snores** so loudly that the neighbor’s dog barks back.', t:'할아버지는 코를 너무 크게 고셔서 옆집 개가 맞받아 짖는다.', s:{bg:'night', c:['grandpa:sleepy'], p:['🐶'], b:'ZZZRRRR…'}},
+ {w:'procrastinate', p:'v', m:'(할 일을) 미루다', d:'To keep delaying something you should do.', e:'I’ll learn how to stop **procrastinating**… tomorrow.', t:'미루는 습관을 고치는 법은… 내일 배울 거다.', s:{bg:'room', c:['me:smug'], p:['📅','🛋️'], b:'Tomorrow. Probably.'}},
+ {w:'wobble', p:'v', m:'흔들흔들하다', d:'To move unsteadily from side to side.', e:'The pudding **wobbled** every time my brother laughed at the table.', t:'형이 식탁에서 웃을 때마다 푸딩이 흔들흔들했다.', s:{bg:'kitchen', c:['me:happy'], p:['🍮'], b:'Wiggle wiggle!', fx:['speed']}},
+ {w:'giggle', p:'v', m:'킥킥 웃다', d:'To laugh quietly in a silly or nervous way.', e:'We couldn’t stop **giggling** when the principal’s microphone squeaked like a duck.', t:'교장 선생님 마이크에서 오리 같은 소리가 나자 우리는 킥킥거림을 멈출 수 없었다.', s:{bg:'class', c:['me:happy','friend:happy'], p:['🎤','🦆'], b:'Hee hee hee!'}},
+ {w:'sneak', p:'v', m:'살금살금 가다', d:'To move quietly so that no one notices you.', e:'I tried to **sneak** a midnight snack, but the fridge light betrayed me.', t:'한밤중에 몰래 간식을 먹으려 했지만, 냉장고 불빛이 나를 배신했다.', s:{bg:'night', c:['me:nervous'], p:['🍰','💡'], b:'Shhh…'}},
+ {w:'apologize', p:'v', m:'사과하다', d:'To say that you are sorry.', e:'I **apologized** to the door after I walked straight into it.', t:'문에 정면으로 부딪힌 뒤, 나는 문에게 사과했다.', s:{bg:'room', c:['me:blush'], p:['🚪'], b:'Sorry, door.', fx:['sparkle']}}
+]};
+
+const POS = { ko:{n:'명사', a:'형용사', v:'동사'}, en:{n:'noun · 명사', a:'adjective · 형용사', v:'verb · 동사'} };
+
+/* =========================================================
+   CARTOON RENDERER (original one-panel comics, SVG)
+   ========================================================= */
+const INK = '#3d2f2a';
+/* 오리지널 캐스트: 동글동글 병아리 가족 (손그림 라인) */
+const PRESET = {
+  me:{col:'#FFE27A'}, mom:{col:'#FFB8CB', acc:'bow'}, dad:{col:'#A9D3FF', acc:'comb'},
+  teacher:{col:'#CDB9FF', acc:'owl'}, friend:{col:'#A8E6BC', acc:'cap'}, sib:{col:'#FFC890', small:true},
+  grandpa:{col:'#DCDFE6', acc:'grandpa'}
+};
+const ARMS_UP = { happy:1, shock:1, proud:1, love:1 };
+const OPEN_BEAK = { happy:1, proud:1, love:1, shock:1, cry:1, angry:1 };
+const AUTO_FX = { nervous:'sweat', sleepy:'zzz', angry:'anger', confused:'question', love:'hearts', shock:'exclaim', proud:'sparkle' };
+let uid = 0;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function eyes(mood){
+  const st = `stroke="${INK}" stroke-width="3" stroke-linecap="round" fill="none"`;
+  const dots = (r=4.2) => `<circle cx="-14" cy="-56" r="${r}" fill="${INK}"/><circle cx="14" cy="-56" r="${r}" fill="${INK}"/><circle cx="-12.6" cy="-57.6" r="1.3" fill="#fff"/><circle cx="15.4" cy="-57.6" r="1.3" fill="#fff"/>`;
+  switch(mood){
+    case 'happy': case 'proud': return `<path d="M-20 -54 Q-14 -62 -8 -54 M8 -54 Q14 -62 20 -54" ${st}/>`;
+    case 'sad': return dots() + `<path d="M-22 -64 L-9 -68 M22 -64 L9 -68" ${st}/>`;
+    case 'angry': return dots() + `<path d="M-23 -70 L-8 -63 M23 -70 L8 -63" ${st}/>`;
+    case 'shock': return `<circle cx="-14" cy="-57" r="8" fill="#fff" stroke="${INK}" stroke-width="2.6"/><circle cx="14" cy="-57" r="8" fill="#fff" stroke="${INK}" stroke-width="2.6"/><circle cx="-14" cy="-57" r="2.4" fill="${INK}"/><circle cx="14" cy="-57" r="2.4" fill="${INK}"/>`;
+    case 'nervous': return dots(3.8) + `<path d="M-22 -64 L-9 -67 M22 -64 L9 -67" ${st}/>`;
+    case 'sleepy': return `<path d="M-20 -55 Q-14 -51 -8 -55 M8 -55 Q14 -51 20 -55" ${st}/>`;
+    case 'smug': return `<path d="M-21 -58 L-7 -58 M7 -58 L21 -58" ${st}/><circle cx="-13" cy="-54.5" r="3.2" fill="${INK}"/><circle cx="15" cy="-54.5" r="3.2" fill="${INK}"/>`;
+    case 'love': return `<path d="M-14 -51 l-6.5 -6.5 a3.8 3.8 0 0 1 6.5 -4.2 a3.8 3.8 0 0 1 6.5 4.2 z M14 -51 l-6.5 -6.5 a3.8 3.8 0 0 1 6.5 -4.2 a3.8 3.8 0 0 1 6.5 4.2 z" fill="#ff5a7e" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>`;
+    case 'confused': return `<circle cx="-14" cy="-56" r="4.4" fill="${INK}"/><circle cx="14" cy="-56" r="2.4" fill="${INK}"/><path d="M7 -67 Q14 -72 21 -66" ${st}/>`;
+    case 'blush': return `<path d="M-20 -55 Q-14 -60 -8 -55 M8 -55 Q14 -60 20 -55" ${st}/>`;
+    case 'suspicious': return `<path d="M-22 -60 L-6 -58 M6 -58 L22 -60" ${st}/><circle cx="-12" cy="-54" r="3.2" fill="${INK}"/><circle cx="16" cy="-54" r="3.2" fill="${INK}"/>`;
+    case 'cry': return `<path d="M-20 -58 Q-14 -52 -8 -58 M8 -58 Q14 -52 20 -58" ${st}/><path d="M-15 -52 q-3 10 0 22 M15 -52 q3 10 0 22" stroke="#6cc0ff" stroke-width="4.5" stroke-linecap="round" fill="none"/>`;
+  }
+  return dots();
+}
+function beak(mood){
+  const o = `fill="#FFA24C" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"`;
+  if (OPEN_BEAK[mood]){
+    const drop = mood === 'shock' ? 12 : mood === 'cry' ? 10 : 8;
+    return `<path d="M-6 -41 Q0 ${-41 + drop + 4} 6 -41 Z" fill="#c8414f" stroke="${INK}" stroke-width="2"/>
+      <path d="M-9 -45 Q0 -51 9 -45 L0 -40 Z" ${o}/><path d="M-6 -41 Q0 ${-41 + drop} 6 -41" ${o}/>`;
+  }
+  const tilt = mood === 'smug' ? ' transform="rotate(-10 0 -44)"' : '';
+  return `<path d="M-8 -45 Q0 -51 8 -45 L0 -38 Z" ${o}${tilt}/>`;
+}
+
+function character(spec, x, baseY){
+  const [who, mood='neutral'] = spec.split(':');
+  const pr = PRESET[who] || PRESET.me, s = pr.small ? .8 : 1, col = pr.col;
+  const up = ARMS_UP[mood];
+  const sw = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+  let g = '';
+  // feet
+  g += `<path d="M-15 -4 l-6 6 M-15 -4 v8 M-15 -4 l6 6 M15 -4 l-6 6 M15 -4 v8 M15 -4 l6 6" stroke="#FF9A3C" stroke-width="3.2" stroke-linecap="round"/>`;
+  // wings (behind body edge)
+  const wing = up ? `M36 -46 q24 -2 28 -22 q-16 0 -28 12 z` : `M35 -46 q18 4 13 24 q-12 -2 -16 -12 z`;
+  g += `<path d="${wing}" fill="${col}" ${sw}/><path d="${wing}" transform="scale(-1 1)" fill="${col}" ${sw}/>`;
+  // accessories behind head
+  if (pr.acc === 'comb') g += `<path d="M-10 -84 q-2 -14 8 -12 q2 -12 10 -6 q8 -6 8 6 q-4 6 -10 12 z" fill="#ef5a4c" ${sw}/>`;
+  if (pr.acc === 'owl') g += `<path d="M-30 -70 l-6 -18 l16 10 z M30 -70 l6 -18 l-16 10 z" fill="${col}" ${sw}/>`;
+  // body
+  g += `<path d="M0 -88 C 28 -88 40 -64 40 -40 C 40 -13 24 -3 0 -3 C -24 -3 -40 -13 -40 -40 C -40 -64 -28 -88 0 -88 Z" fill="${col}" ${sw} stroke-width="3.2"/>`;
+  g += `<ellipse cx="0" cy="-20" rx="21" ry="13" fill="#fff" opacity=".38"/>`;
+  if (!pr.acc || pr.acc === 'bow' || pr.acc === 'owl') g += `<path d="M-3 -88 q-4 -12 4 -15 M3 -88 q5 -10 12 -7" ${sw} fill="none"/>`;
+  // cheeks (soft, solid)
+  const bl = mood === 'blush' || mood === 'love' ? .95 : mood === 'angry' || mood === 'suspicious' ? .25 : .55;
+  g += `<ellipse cx="-25" cy="-44" rx="7.5" ry="5" fill="#ff8fa6" opacity="${bl}"/><ellipse cx="25" cy="-44" rx="7.5" ry="5" fill="#ff8fa6" opacity="${bl}"/>`;
+  g += eyes(mood) + beak(mood);
+  if (pr.acc === 'bow') g += `<path d="M-2 -88 l-14 -9 v16 z M2 -88 l14 -9 v16 z" fill="#ff6f91" ${sw}/><circle cx="0" cy="-88" r="4" fill="#ff6f91" ${sw}/>`;
+  if (pr.acc === 'cap') g += `<path d="M-30 -72 Q-27 -94 0 -94 Q27 -94 30 -72 Z" fill="#ef5a4c" ${sw}/><path d="M8 -73 Q32 -76 48 -68" ${sw} stroke-width="5" fill="none"/>`;
+  if (pr.acc === 'owl' || pr.acc === 'grandpa') g += `<circle cx="-14" cy="-56" r="9.5" fill="#fff" fill-opacity=".25" stroke="${INK}" stroke-width="2.4"/><circle cx="14" cy="-56" r="9.5" fill="#fff" fill-opacity=".25" stroke="${INK}" stroke-width="2.4"/><path d="M-4.5 -57 h9" stroke="${INK}" stroke-width="2.4"/>`;
+  if (pr.acc === 'grandpa') g += `<path d="M-24 -68 q8 -6 16 -2 M24 -68 q-8 -6 -16 -2" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M-24 -68 q8 -6 16 -2 M24 -68 q-8 -6 -16 -2" stroke="${INK}" stroke-width="1.4" stroke-linecap="round" fill="none"/>`;
+  return { svg:`<g transform="translate(${x} ${baseY}) scale(${s})">${g}</g>`, x, top: baseY - 96 * s, mood };
+}
+
+function fxSvg(kind, c){
+  const x = c.x, t = c.top;
+  switch(kind){
+    case 'sweat': return `<path transform="translate(${x+34} ${t+16})" d="M0 0 q9 12 0 17 q-9 -5 0 -17z" fill="#7cc8ff" stroke="${INK}" stroke-width="2"/>`;
+    case 'zzz': return `<g font-family="Jua, sans-serif" fill="#5b6cff" stroke="${INK}" stroke-width=".8"><text x="${x+34}" y="${t+22}" font-size="16">Z</text><text x="${x+47}" y="${t+8}" font-size="20">Z</text><text x="${x+62}" y="${t-8}" font-size="25">Z</text></g>`;
+    case 'anger': return `<path transform="translate(${x+30} ${t+6})" d="M-9 -2 q5 0 5 -7 M2 -9 q0 5 7 5 M9 2 q-5 0 -5 7 M-2 9 q0 -5 -7 -5" stroke="#ef3e36" stroke-width="3.4" stroke-linecap="round" fill="none"/>`;
+    case 'exclaim': return `<text x="${x+40}" y="${t+40}" font-family="Jua, sans-serif" font-size="38" fill="#ef3e36" stroke="${INK}" stroke-width="1.6">!</text>`;
+    case 'question': return `<text x="${x+33}" y="${t+12}" font-family="Jua, sans-serif" font-size="34" fill="#3ec1d3" stroke="${INK}" stroke-width="1.6">?</text>`;
+    case 'hearts': return `<g fill="#ff3d6e" stroke="${INK}" stroke-width="1.4" font-family="sans-serif"><text x="${x+30}" y="${t+6}" font-size="18">♥</text><text x="${x-46}" y="${t+14}" font-size="14">♥</text><text x="${x+44}" y="${t-12}" font-size="12">♥</text></g>`;
+    case 'sparkle': {
+      const star = (sx, sy, k) => `<path transform="translate(${sx} ${sy}) scale(${k})" d="M0 -10 L2.6 -2.6 L10 0 L2.6 2.6 L0 10 L-2.6 2.6 L-10 0 L-2.6 -2.6Z" fill="#ffd23f" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>`;
+      return star(x-44, t+10, 1) + star(x+44, t+2, .8) + star(x+52, t+40, .6);
+    }
+    case 'speed': return `<g stroke="${INK}" stroke-width="3" stroke-linecap="round" opacity=".55"><path d="M${x-50} ${t+40} h-28"/><path d="M${x-54} ${t+56} h-38"/><path d="M${x-50} ${t+72} h-24"/></g>`;
+  }
+  return '';
+}
+
+function background(bg, id){
+  const floor = (c1, c2) => `<rect x="0" y="186" width="320" height="34" fill="${c1}"/><path d="M0 186 H320" stroke="${INK}" stroke-width="3"/><path d="M0 200 H320 M0 212 H320" stroke="${c2}" stroke-width="2"/>`;
+  switch(bg){
+    case 'class': return `<rect width="320" height="220" fill="#fbf1dc"/>
+      <rect x="22" y="22" width="276" height="88" rx="4" fill="#3f6e5f" stroke="#a87445" stroke-width="7"/>
+      <path d="M40 46 q20 -8 40 0 t40 0 M40 70 h70 M200 52 q15 10 30 0 M220 82 h50" stroke="#e9f3ec" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".7"/>` + floor('#d9a86c', '#c08e52');
+    case 'street': return `<rect width="320" height="220" fill="#d3efff"/>
+      <rect x="10" y="70" width="52" height="116" fill="#9fb4d6" stroke="${INK}" stroke-width="2.5"/><rect x="250" y="52" width="60" height="134" fill="#b6c4e6" stroke="${INK}" stroke-width="2.5"/>
+      <path d="M20 86h12M40 86h12M20 106h12M40 106h12M20 126h12M40 126h12M262 70h12M286 70h12M262 92h12M286 92h12M262 114h12M286 114h12" stroke="#fff6c2" stroke-width="7"/>
+      <circle cx="36" cy="38" r="15" fill="#ffd23f" stroke="${INK}" stroke-width="2.5"/>` + floor('#cfcfd6', '#b4b4bf');
+    case 'night': return `<rect width="320" height="220" fill="#38407a"/>
+      <circle cx="268" cy="40" r="20" fill="#fff3b0" stroke="${INK}" stroke-width="2.5"/><circle cx="276" cy="34" r="17" fill="#38407a"/>
+      <g fill="#fff3b0"><circle cx="40" cy="30" r="2"/><circle cx="90" cy="60" r="1.6"/><circle cx="200" cy="22" r="2"/><circle cx="160" cy="70" r="1.4"/><circle cx="230" cy="96" r="1.8"/><circle cx="60" cy="100" r="1.4"/></g>` + floor('#3b437a', '#2f3667');
+    case 'kitchen': return `<rect width="320" height="220" fill="#dff5ec"/>
+      <path d="M0 40 H320 M0 80 H320 M0 120 H320 M40 0 V160 M80 0 V160 M120 0 V160 M160 0 V160 M200 0 V160 M240 0 V160 M280 0 V160" stroke="#bfe6d6" stroke-width="2"/>
+      <rect x="0" y="150" width="320" height="36" fill="#c98b4f" stroke="${INK}" stroke-width="2.5"/>` + floor('#f2d29b', '#e0bb7c');
+    default: return `<rect width="320" height="220" fill="#fff1dc"/>
+      <rect x="226" y="30" width="64" height="56" fill="#bfe9ff" stroke="${INK}" stroke-width="3"/><path d="M258 30 V86 M226 58 H290" stroke="${INK}" stroke-width="3"/>
+      <rect x="30" y="34" width="44" height="34" fill="#ffa3c0" stroke="${INK}" stroke-width="2.5"/><path d="M38 60 l10 -12 l8 8 l6 -6 l8 10" stroke="${INK}" stroke-width="2" fill="none"/>` + floor('#e8b87a', '#d39e5b');
+  }
+}
+
+function textWidth(str, size){ let w = 0; for (const ch of str) w += /[ᄀ-ᇿ㄰-㆏가-힣]/.test(ch) ? size * 1.0 : ch === ' ' ? size * .3 : size * .56; return w; }
+function wrapLines(text, size, maxW){
+  const words = text.split(' '), lines = []; let cur = '';
+  for (const w of words){ const t = cur ? cur + ' ' + w : w; if (textWidth(t, size) > maxW && cur){ lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur); return lines.slice(0, 2);
+}
+
+function cartoon(sc){
+  const id = 'ht' + (++uid);
+  const chars = sc.c || ['me:neutral'];
+  const xs = chars.length === 1 ? [108] : [82, 238];
+  const cs = chars.map((c, i) => character(c, xs[i], 190));
+  let props = '';
+  const slots = chars.length === 1 ? [[222,186,50],[282,186,40],[268,126,34]] : [[160,188,42],[160,128,32],[300,132,28]];
+  (sc.p || []).forEach((p, i) => {
+    const o = typeof p === 'string' ? { e:p, x:slots[i % 3][0], y:slots[i % 3][1], s:slots[i % 3][2] } : p;
+    props += `<text x="${o.x}" y="${o.y}" font-size="${o.s}" text-anchor="middle" font-family="'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif">${o.e}</text>`;
+  });
+  let fx = '';
+  cs.forEach(c => { const a = AUTO_FX[c.mood]; if (a) fx += fxSvg(a, c); });
+  (sc.fx || []).forEach(k => { if (!cs.some(c => AUTO_FX[c.mood] === k)) fx += fxSvg(k, cs[0]); });
+  let bubble = '';
+  if (sc.b){
+    const sp = cs[Math.min(sc.who || 0, cs.length - 1)];
+    const size = 15, lines = wrapLines(sc.b, size, 150);
+    const w = Math.max(...lines.map(l => textWidth(l, size))) + 26, h = lines.length * 19 + 16;
+    let bx = sp.x - w / 2 + (chars.length === 1 ? 46 : (sp.x < 160 ? 26 : -26));
+    bx = Math.max(10, Math.min(310 - w, bx));
+    const by = 12, thought = sc.b.startsWith('(');
+    const tx = Math.max(bx + 14, Math.min(bx + w - 14, sp.x + (sp.x < 160 ? 14 : -14)));
+    const tail = thought
+      ? `<circle cx="${(tx + sp.x) / 2}" cy="${by + h + 10}" r="4" fill="#fff" stroke="${INK}" stroke-width="2"/><circle cx="${sp.x + 4}" cy="${sp.top - 6}" r="2.6" fill="#fff" stroke="${INK}" stroke-width="2"/>`
+      : `<path d="M${tx - 9} ${by + h - 2} L${sp.x + 4} ${sp.top - 4} L${tx + 9} ${by + h - 2}" fill="#fff" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>`;
+    bubble = `<rect x="${bx}" y="${by}" width="${w}" height="${h}" rx="${thought ? h / 2 : 12}" fill="#fff" stroke="${INK}" stroke-width="2.6" ${thought ? 'stroke-dasharray="5 4"' : ''}/>` + tail +
+      (thought ? '' : `<path d="M${tx - 7.5} ${by + h - 2} L${tx + 7.5} ${by + h - 2}" stroke="#fff" stroke-width="3.2"/>`) +
+      lines.map((l, i) => `<text x="${bx + w / 2}" y="${by + 22 + i * 19}" text-anchor="middle" font-family="Jua, 'Noto Sans KR', sans-serif" font-size="${size}" fill="${INK}">${esc(l)}</text>`).join('');
+  }
+  return `<svg class="toon" viewBox="0 0 320 220" role="img" aria-label="${esc(sc.b || '만화')}" xmlns="http://www.w3.org/2000/svg">
+    <defs><pattern id="${id}" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1" fill="#000" opacity=".05"/></pattern>
+      <filter id="${id}r" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="${uid % 7 + 1}"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter></defs>
+    <g filter="url(#${id}r)">${background(sc.bg)}</g><rect width="320" height="220" fill="url(#${id})"/>
+    ${props}<g filter="url(#${id}r)">${cs.map(c => c.svg).join('')}${fx}</g>${bubble}
+    <rect x="1.5" y="1.5" width="317" height="217" rx="3" fill="none" stroke="${INK}" stroke-width="3"/>
+  </svg>`;
+}
+
+/* =========================================================
+   STORAGE
+   ========================================================= */
+const KEY = 'word-drop.v1';
+const mem = {};
+function load(){ try { const v = JSON.parse(localStorage.getItem(KEY)); if (v && typeof v === 'object') return v; } catch(e){} return mem.data || {}; }
+function save(d){ mem.data = d; try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e){} }
+const DB = Object.assign({ best:{ko:0, en:0}, dex:{ko:[], en:[]}, lang:'ko', theme:null }, load());
+DB.best = Object.assign({ko:0, en:0}, DB.best); DB.dex = Object.assign({ko:[], en:[]}, DB.dex);
+
+/* =========================================================
+   DOM / THEME
+   ========================================================= */
+const $ = s => document.querySelector(s), $$ = s => Array.from(document.querySelectorAll(s));
+const field = $('#field'), dropsEl = $('#drops'), input = $('#input');
+const SUN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+const isDark = () => DB.theme ? DB.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+function applyTheme(){ if (DB.theme) document.documentElement.setAttribute('data-theme', DB.theme); $('#themeBtn').innerHTML = isDark() ? SUN : MOON; }
+$('#themeBtn').addEventListener('click', () => { DB.theme = isDark() ? 'light' : 'dark'; save(DB); applyTheme(); });
+applyTheme();
+
+const HEART = '<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z" fill="#ff5d8f" stroke="#1b1b1f" stroke-width="2.2" stroke-linejoin="round"/></svg>';
+const MAX_LIVES = 5;
+
+/* =========================================================
+   RANKING (Netlify Function /api/scores, 오프라인이면 이 브라우저에 저장)
+   ========================================================= */
+const API = '/api/scores';
+const ONLINE_CAPABLE = location.protocol === 'http:' || location.protocol === 'https:';
+const ADMIN = new URLSearchParams(location.search).has('admin');
+DB.local = Array.isArray(DB.local) ? DB.local : [];
+DB.name = typeof DB.name === 'string' ? DB.name : '';
+const Net = { mode: ONLINE_CAPABLE ? 'pending' : 'local', records: ONLINE_CAPABLE ? [] : DB.local, loading: null, lastId: null, tab: 'ko' };
+const nameKey = n => String(n).trim().toLowerCase();
+const sortRecs = r => r.slice().sort((a, b) => b.score - a.score || String(a.date).localeCompare(String(b.date)));
+function board(lang){ const seen = new Set(), out = []; for (const r of sortRecs(Net.records.filter(r => r.lang === lang))){ const k = nameKey(r.name); if (!seen.has(k)){ seen.add(k); out.push(r); } } return out; }
+function fetchScores(){
+  if (!ONLINE_CAPABLE){ Net.records = DB.local; renderRank(); return Promise.resolve(); }
+  if (Net.loading) return Net.loading;
+  Net.loading = (async () => {
+    try {
+      const r = await fetch(API, { cache:'no-store', headers:{ accept:'application/json' } });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(); Net.records = Array.isArray(j.records) ? j.records : []; Net.mode = 'online';
+    } catch(e){ Net.mode = 'local'; Net.records = DB.local; }
+    finally { Net.loading = null; renderRank(); }
+  })();
+  return Net.loading;
+}
+async function submitScore(payload){
+  if (ONLINE_CAPABLE){
+    try {
+      const r = await fetch(API, { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify(payload) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.record){ Net.mode = 'online'; Net.records = sortRecs(Net.records.concat(j.record)); Net.lastId = j.record.id; renderRank(); return Object.assign({ where:'online' }, j); }
+      if (r.status === 400) return { where:'rejected', error: j.error };
+    } catch(e){}
+  }
+  const rec = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: new Date().toISOString(), name: payload.name, lang: payload.lang,
+    score: payload.score, caught: payload.caught, wave: payload.wave, maxCombo: payload.maxCombo, seconds: Math.round(payload.ms / 1000) };
+  const prev = DB.local.filter(r => r.lang === rec.lang && nameKey(r.name) === nameKey(rec.name));
+  DB.local.push(rec); DB.local = sortRecs(DB.local).slice(0, 300); save(DB);
+  if (Net.mode !== 'online') Net.records = DB.local;
+  Net.lastId = rec.id; renderRank();
+  const b = board(rec.lang).length ? (() => { const seen = new Set(), out = []; for (const r of sortRecs(DB.local.filter(r => r.lang === rec.lang))){ const k = nameKey(r.name); if (!seen.has(k)){ seen.add(k); out.push(r); } } return out; })() : [];
+  return { where:'local', record: rec, rank: b.findIndex(r => nameKey(r.name) === nameKey(rec.name)) + 1, players: b.length, prevBest: prev.length ? Math.max(...prev.map(r => r.score)) : null };
+}
+async function removeScore(id){
+  if (Net.mode === 'online'){
+    let token = ''; try { token = sessionStorage.getItem('word-drop.admin') || ''; } catch(e){}
+    if (!token){ token = (window.prompt('관리자 토큰을 입력하세요') || '').trim(); if (!token) return; }
+    try {
+      const r = await fetch(API + '?id=' + encodeURIComponent(id), { method:'DELETE', headers:{ 'x-admin-token': token } });
+      if (r.status === 403){ try { sessionStorage.removeItem('word-drop.admin'); } catch(e){} alert('관리자 토큰이 올바르지 않습니다.'); return; }
+      if (!r.ok) throw new Error();
+      try { sessionStorage.setItem('word-drop.admin', token); } catch(e){}
+    } catch(e){ return; }
+    await fetchScores(); return;
+  }
+  DB.local = DB.local.filter(r => r.id !== id); save(DB); Net.records = DB.local; renderRank();
+}
+const fmtDay = iso => { const d = new Date(iso); return `${d.getMonth() + 1}.${d.getDate()}`; };
+function rankItem(r, i, opts = {}){
+  const li = document.createElement('li');
+  if (opts.me && r.id === Net.lastId) li.className = 'me';
+  const m = document.createElement('span'); m.className = 'medal' + (i < 3 ? ` m${i + 1}` : ''); m.textContent = i + 1;
+  const n = document.createElement('div'); n.className = 'nm'; n.textContent = r.name;
+  const sm = document.createElement('small'); sm.textContent = `${fmtDay(r.date)} · ${r.caught}단어 · 웨이브 ${r.wave}`; n.appendChild(sm);
+  const sc = document.createElement('span'); sc.className = 'sc'; sc.textContent = Number(r.score).toLocaleString();
+  li.append(m, n, sc);
+  if (opts.admin){ const x = document.createElement('button'); x.className = 'x'; x.textContent = '✕'; x.title = '기록 삭제'; x.setAttribute('aria-label', `${r.name} 기록 삭제`);
+    x.addEventListener('click', () => { if (confirm(`${r.name} · ${r.score}점 기록을 삭제할까요?`)) removeScore(r.id); }); li.appendChild(x); }
+  else li.appendChild(document.createElement('span'));
+  return li;
+}
+function renderRank(){
+  const st = $('#netStatus');
+  st.dataset.mode = Net.mode;
+  st.textContent = { online:'온라인 랭킹 · 모두와 공유', local:'오프라인 · 이 브라우저에만 저장', pending:'랭킹 불러오는 중…' }[Net.mode];
+  $$('[data-rank]').forEach(b => b.setAttribute('aria-pressed', b.dataset.rank === Net.tab));
+  const list = $('#rankList'); list.innerHTML = '';
+  const b = board(Net.tab);
+  if (!b.length){ const li = document.createElement('li'); li.className = 'rank-empty'; li.textContent = Net.mode === 'pending' ? '불러오는 중…' : '아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!'; list.appendChild(li); }
+  b.slice(0, 10).forEach((r, i) => list.appendChild(rankItem(r, i, { me:true, admin: ADMIN || Net.mode === 'local' })));
+  const mini = $('#miniRank'), mb = board(G.lang).slice(0, 3);
+  mini.innerHTML = ''; mini.hidden = !mb.length;
+  mb.forEach((r, i) => mini.appendChild(rankItem(r, i)));
+}
+$$('[data-rank]').forEach(b => b.addEventListener('click', () => { Net.tab = b.dataset.rank; renderRank(); }));
+$('#rankRefresh').addEventListener('click', () => fetchScores());
+setInterval(() => { if (!document.hidden && G.state !== 'play') fetchScores(); }, 30000);
+
+/* =========================================================
+   GAME
+   ========================================================= */
+const G = { state:'idle', lang: DB.lang === 'en' ? 'en' : 'ko', drops:[], lives:MAX_LIVES, score:0, combo:0, maxCombo:0, cleared:0, wave:1,
+  spawnAcc:0, last:0, activeMs:0, caught:[], missed:[], submits:0, hits:0, recent:[], composing:false, pendingSubmit:false, tab:'caught', shown:null };
+
+function renderHearts(changed){
+  const h = $('#hearts'); h.innerHTML = '';
+  for (let i = 0; i < MAX_LIVES; i++){
+    const d = document.createElement('span'); d.innerHTML = HEART; const svg = d.firstChild;
+    if (i >= G.lives) svg.classList.add('lost');
+    if (changed === 'gain' && i === G.lives - 1) svg.classList.add('gain');
+    h.appendChild(svg);
+  }
+}
+function renderHud(){ $('#sScore').textContent = G.score.toLocaleString(); $('#sCombo').textContent = G.combo; $('#sWave').textContent = G.wave; }
+
+function setLang(l){
+  G.lang = l; DB.lang = l; save(DB); Net.tab = l; renderRank();
+  $$('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === l));
+  document.documentElement.lang = l === 'en' ? 'en' : 'ko';
+  input.setAttribute('lang', l);
+  input.placeholder = l === 'en' ? 'Type the word…' : '여기에 입력';
+  $('#hint').innerHTML = l === 'en' ? '다 치면 바로 팡! · <kbd>Esc</kbd> 일시정지' : '<kbd>Enter</kbd> / <kbd>Space</kbd> 발사';
+  $('#bestStart').innerHTML = DB.best[l] ? `${l === 'en' ? 'English' : '한국어'} 최고 점수 <b>${DB.best[l].toLocaleString()}</b>` : '';
+  G.caught = []; G.missed = []; G.shown = null;
+  renderCard(null); renderChips(); renderDex();
+}
+$$('[data-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+function dims(){ return { W: field.clientWidth, H: field.clientHeight, ground: field.clientHeight - 46 }; }
+const fallTime = () => Math.max(4.3, 11.5 - (G.wave - 1) * 0.8);
+const spawnGap = () => Math.max(0.7, 2.4 - (G.wave - 1) * 0.2);
+const maxOnScreen = () => Math.min(10, 3 + G.wave);
+
+const nameInput = $('#nameInput');
+nameInput.value = DB.name;
+nameInput.addEventListener('input', () => $('#nameField').classList.remove('error'));
+nameInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing){ e.preventDefault(); e.stopPropagation(); startGame(); } });
+function startGame(){
+  const nm = nameInput.value.trim();
+  if (!nm){ $('#startOv').hidden = false; $('#overOv').hidden = true; const f = $('#nameField'); f.classList.remove('error'); void f.offsetWidth; f.classList.add('error'); nameInput.focus(); return; }
+  DB.name = nm.slice(0, 16); save(DB);
+  G.activeMs = 0;
+  dropsEl.innerHTML = ''; G.drops = [];
+  Object.assign(G, { state:'play', lives:MAX_LIVES, score:0, combo:0, maxCombo:0, cleared:0, wave:1, spawnAcc:1.6, caught:[], missed:[], submits:0, hits:0, recent:[] });
+  renderHearts(); renderHud(); renderChips(); setTab('caught');
+  $('#startOv').hidden = true; $('#overOv').hidden = true; $('#pauseOv').hidden = true;
+  $('#pauseBtn').disabled = false;
+  input.disabled = false; input.value = ''; input.focus();
+  banner('READY? GO!');
+  G.last = performance.now(); requestAnimationFrame(loop);
+}
+
+function pickEntry(){
+  const list = WORDS[G.lang], onScreen = new Set(G.drops.map(d => d.entry.w));
+  const firsts = new Set(G.drops.map(d => d.entry.w[0]));
+  let pool = list.filter(e => !onScreen.has(e.w) && !G.recent.includes(e.w));
+  if (G.lang === 'en'){ const p2 = pool.filter(e => !firsts.has(e.w[0])); if (p2.length) pool = p2; }
+  if (!pool.length) pool = list.filter(e => !onScreen.has(e.w));
+  const e = pool[Math.floor(Math.random() * pool.length)];
+  G.recent.push(e.w); if (G.recent.length > Math.min(18, list.length - 8)) G.recent.shift();
+  return e;
+}
+
+function spawn(){
+  const { W, ground } = dims();
+  const entry = pickEntry(); if (!entry) return;
+  const el = document.createElement('div'); el.className = 'drop'; el.textContent = entry.w;
+  const heart = G.lives < MAX_LIVES && Math.random() < 0.08;
+  if (heart) el.classList.add('heart');
+  dropsEl.appendChild(el);
+  const w = el.offsetWidth, h = el.offsetHeight;
+  let x = 10, tries = 0;
+  do { x = 10 + Math.random() * Math.max(1, W - w - 20); tries++; }
+  while (tries < 12 && G.drops.some(d => d.y < h * 2.2 && Math.abs(d.x - x) < Math.max(d.w, w) + 8));
+  const d = { el, entry, x, y: -h - 4, w, h, heart, speed: (ground + h) / (fallTime() * (0.9 + Math.random() * 0.2)) };
+  el.style.transform = `translate(${x}px, ${d.y}px)`;
+  G.drops.push(d);
+  highlight();
+}
+
+function loop(t){
+  if (G.state !== 'play') return;
+  const dt = Math.min(0.05, (t - G.last) / 1000); G.last = t; G.activeMs += dt * 1000;
+  const { ground } = dims();
+  G.spawnAcc += dt;
+  if (G.spawnAcc >= spawnGap() && G.drops.length < maxOnScreen()){ G.spawnAcc = 0; spawn(); }
+  for (let i = G.drops.length - 1; i >= 0; i--){
+    const d = G.drops[i];
+    d.y += d.speed * dt;
+    d.el.style.transform = `translate(${d.x}px, ${d.y}px)`;
+    if (d.y + d.h > ground - 70) d.el.classList.add('danger');
+    if (d.y + d.h >= ground){ miss(d, i); if (G.state !== 'play') return; }
+  }
+  requestAnimationFrame(loop);
+}
+
+function miss(d, i){
+  G.drops.splice(i, 1);
+  d.el.classList.remove('danger', 'target'); d.el.classList.add('splat');
+  setTimeout(() => d.el.remove(), 500);
+  G.lives--; G.combo = 0;
+  if (!G.missed.includes(d.entry) && !G.caught.includes(d.entry)) G.missed.push(d.entry);
+  field.classList.remove('hurt'); void field.offsetWidth; field.classList.add('hurt');
+  renderHearts(); renderHud(); renderChips(); highlight();
+  if (G.lives <= 0) gameOver();
+}
+
+function floatText(text, x, y, cls){
+  const f = document.createElement('div'); f.className = 'float' + (cls ? ' ' + cls : ''); f.textContent = text;
+  f.style.left = x + 'px'; f.style.top = y + 'px'; field.appendChild(f); setTimeout(() => f.remove(), 820);
+}
+function banner(text){ const b = document.createElement('div'); b.className = 'banner'; b.textContent = text; field.appendChild(b); setTimeout(() => b.remove(), 1300); }
+
+function clear(d){
+  G.drops.splice(G.drops.indexOf(d), 1);
+  d.el.classList.remove('target', 'danger'); d.el.classList.add('pop');
+  setTimeout(() => d.el.remove(), 330);
+  G.combo++; G.maxCombo = Math.max(G.maxCombo, G.combo); G.cleared++; G.hits++;
+  const len = [...d.entry.w].length * (G.lang === 'ko' ? 2 : 1);
+  const pts = Math.round(len * 10 * (1 + Math.min(G.combo, 20) * 0.1));
+  G.score += pts;
+  floatText('+' + pts, d.x + 4, d.y - 6);
+  if (d.heart && G.lives < MAX_LIVES){ G.lives++; renderHearts('gain'); floatText('♥ +1', d.x + d.w - 30, d.y - 30, 'life'); }
+  if (G.combo > 0 && G.combo % 10 === 0) banner(`${G.combo} COMBO!`);
+  const newWave = 1 + Math.floor(G.cleared / 8);
+  if (newWave > G.wave){ G.wave = newWave; banner(`WAVE ${G.wave}`); }
+  G.missed = G.missed.filter(e => e !== d.entry);
+  if (!G.caught.includes(d.entry)) G.caught.unshift(d.entry);
+  const dex = DB.dex[G.lang]; if (!dex.includes(d.entry.w)){ dex.push(d.entry.w); save(DB); }
+  renderHud(); renderCard(d.entry, true); renderChips(); renderDex();
+}
+
+function submit(){
+  if (G.state !== 'play') return;
+  const v = input.value.trim();
+  input.value = '';
+  if (!v){ highlight(); return; }
+  G.submits++;
+  const matches = G.drops.filter(d => d.entry.w === v || (G.lang === 'en' && d.entry.w.toLowerCase() === v.toLowerCase()));
+  if (matches.length){ clear(matches.reduce((a, b) => (b.y > a.y ? b : a))); }
+  else { G.combo = 0; renderHud(); input.classList.remove('wrong'); void input.offsetWidth; input.classList.add('wrong'); }
+  highlight();
+}
+
+function highlight(){
+  let v = input.value;
+  if (G.composing && v) v = v.slice(0, -1);
+  v = v.trim();
+  const vv = G.lang === 'en' ? v.toLowerCase() : v;
+  let best = null;
+  G.drops.forEach(d => {
+    const w = d.entry.w, ww = G.lang === 'en' ? w.toLowerCase() : w;
+    if (vv && ww.startsWith(vv)){
+      d.el.innerHTML = `<span class="typed">${esc(w.slice(0, v.length))}</span>${esc(w.slice(v.length))}`;
+      if (!best || d.y > best.y) best = d;
+    } else if (d.el.children.length){ d.el.textContent = w; }
+    d.el.classList.remove('target');
+  });
+  if (best) best.el.classList.add('target');
+}
+
+input.addEventListener('compositionstart', () => { G.composing = true; });
+input.addEventListener('compositionend', () => {
+  G.composing = false;
+  if (G.pendingSubmit){ G.pendingSubmit = false; setTimeout(submit, 0); } else highlight();
+});
+input.addEventListener('input', e => {
+  if (typeof e.isComposing === 'boolean') G.composing = e.isComposing;
+  if (G.state !== 'play') return;
+  const v = input.value;
+  if (/\s$/.test(v) && !G.composing){ submit(); return; }
+  if (G.lang === 'en' && !G.composing){
+    const t = v.trim().toLowerCase();
+    if (t && G.drops.some(d => d.entry.w.toLowerCase() === t)){ submit(); return; }
+  }
+  highlight();
+});
+input.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ e.preventDefault(); togglePause(); return; }
+  if (e.key === 'Enter' || e.key === ' '){
+    if (e.isComposing || e.keyCode === 229 || G.composing){ G.pendingSubmit = true; if (e.key === ' ') e.preventDefault(); return; }
+    e.preventDefault(); submit();
+  }
+});
+input.addEventListener('paste', e => e.preventDefault());
+input.addEventListener('animationend', () => input.classList.remove('wrong'));
+field.addEventListener('animationend', e => { if (e.target === field) field.classList.remove('hurt'); });
+field.addEventListener('mousedown', e => { if (G.state === 'play' && !e.target.closest('.ov')){ e.preventDefault(); input.focus(); } });
+
+function togglePause(){
+  if (G.state === 'play'){
+    G.state = 'pause'; $('#pauseOv').hidden = false; input.disabled = true; $('#pauseBtn').textContent = '계속하기';
+  } else if (G.state === 'pause'){
+    G.state = 'play'; $('#pauseOv').hidden = true; input.disabled = false; input.focus();
+    $('#pauseBtn').innerHTML = '일시정지 <kbd>Esc</kbd>';
+    G.last = performance.now(); requestAnimationFrame(loop);
+  }
+}
+$('#pauseBtn').addEventListener('click', togglePause);
+$('#resumeBtn').addEventListener('click', togglePause);
+$('#quitBtn').addEventListener('click', () => { G.state = 'play'; gameOver(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && G.state === 'play') togglePause(); });
+
+function gameOver(){
+  G.state = 'over';
+  G.drops.forEach(d => { if (!G.missed.includes(d.entry) && !G.caught.includes(d.entry)) G.missed.push(d.entry); d.el.remove(); });
+  G.drops = [];
+  input.disabled = true; input.value = ''; $('#pauseBtn').disabled = true; $('#pauseBtn').innerHTML = '일시정지 <kbd>Esc</kbd>';
+  $('#pauseOv').hidden = true;
+  const prev = DB.best[G.lang] || 0, isBest = G.score > prev;
+  if (isBest){ DB.best[G.lang] = G.score; save(DB); }
+  $('#rScore').innerHTML = G.score.toLocaleString() + (isBest && G.score > 0 ? '<span class="newbest">NEW BEST</span>' : '');
+  $('#rCaught').textContent = G.caught.length + '개';
+  $('#rCombo').textContent = G.maxCombo;
+  $('#rAcc').textContent = (G.submits ? Math.round(G.hits / G.submits * 100) : 0) + '%';
+  $('#rWave').textContent = G.wave;
+  $('#bestOver').innerHTML = `${G.lang === 'en' ? 'English' : '한국어'} 최고 점수 <b>${DB.best[G.lang].toLocaleString()}</b>`;
+  $('#overOv').hidden = false;
+  renderChips();
+  const rl = $('#rRank');
+  if (G.score > 0 && G.cleared > 0){
+    rl.innerHTML = '<span class="muted">랭킹에 올리는 중…</span>';
+    submitScore({ name: DB.name, lang: G.lang, score: G.score, caught: G.cleared, wave: G.wave, maxCombo: G.maxCombo, ms: Math.round(G.activeMs) }).then(info => {
+      if (info.where === 'rejected'){ rl.innerHTML = '<span class="muted">이 기록은 랭킹에 올라가지 않았어요.</span>'; return; }
+      const label = G.lang === 'en' ? 'English' : '한국어';
+      const better = info.prevBest == null || info.record.score > info.prevBest;
+      rl.innerHTML = `${label} 랭킹 <b>${info.rank}위</b> <span class="muted">/ ${info.players}명</span>` +
+        (better ? '' : ` <span class="muted">· 내 최고 ${Number(info.prevBest).toLocaleString()}점</span>`) +
+        (info.where === 'local' ? `<br><span class="muted">${ONLINE_CAPABLE ? '서버 연결 실패 · ' : ''}이 브라우저에만 저장됐어요</span>` : '');
+    });
+  } else rl.innerHTML = '<span class="muted">단어를 하나 이상 잡아야 랭킹에 올라가요.</span>';
+  setTimeout(() => $('#againBtn').focus(), 50);
+}
+$('#startBtn').addEventListener('click', startGame);
+$('#againBtn').addEventListener('click', startGame);
+$('#menuBtn').addEventListener('click', () => { $('#overOv').hidden = true; $('#startOv').hidden = false; setLang(G.lang); G.state = 'idle'; fetchScores(); setTimeout(() => nameInput.focus(), 0); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && G.state === 'idle' && !$('#startOv').hidden && document.activeElement?.tagName !== 'BUTTON'){ e.preventDefault(); startGame(); }
+  if (e.key === 'Escape' && G.state === 'pause' && document.activeElement !== input){ togglePause(); }
+});
+window.addEventListener('resize', () => { const { W } = dims(); G.drops.forEach(d => { d.x = Math.min(d.x, Math.max(10, W - d.w - 10)); }); });
+
+/* =========================================================
+   PANEL
+   ========================================================= */
+function fmtEx(s){ return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+function renderCard(entry, isNew){
+  const box = $('#card');
+  G.shown = entry;
+  if (!entry){
+    box.className = '';
+    box.innerHTML = `<div class="empty">${cartoon({bg:'room', c:['me:happy'], p:['📚','✨'], b:G.lang === 'en' ? 'Catch a word!' : '단어를 잡아 봐!'})}
+      <span class="big">아직 잡은 단어가 없어요</span>단어를 맞히면 뜻·예문·만화가 여기 나타나요.</div>`;
+    box.querySelector('.toon').style.cssText = 'border:3px solid #1b1b1f; border-radius:12px; max-width:260px; margin:0 auto';
+    return;
+  }
+  const en = G.lang === 'en';
+  box.className = 'card' + (isNew ? ' new' : '');
+  box.innerHTML = cartoon(entry.s) + `<div class="card-body">
+      <div class="word-row"><span class="word" lang="${G.lang}">${esc(entry.w)}</span><span class="pos ${entry.p}">${POS[G.lang][entry.p]}</span></div>
+      ${en ? `<div class="meaning">${esc(entry.m)}</div>` : ''}
+      <p class="def" lang="${G.lang}">${esc(entry.d)}</p>
+      <div class="ex"><span class="ex-label">${en ? 'Example' : '예문'}</span><span lang="${G.lang}">${fmtEx(entry.e)}</span>${en ? `<span class="tr">${esc(entry.t)}</span>` : ''}</div>
+    </div>`;
+  if (isNew){ void box.offsetWidth; }
+  $$('.chip').forEach(c => c.classList.toggle('on', c.dataset.w === entry.w));
+}
+function setTab(t){ G.tab = t; $$('[data-tab]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab === t)); renderChips(); }
+$$('[data-tab]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+function renderChips(){
+  $('#nCaught').textContent = G.caught.length; $('#nMissed').textContent = G.missed.length;
+  const list = G.tab === 'caught' ? G.caught : G.missed, box = $('#chips');
+  box.innerHTML = '';
+  if (!list.length){ const n = document.createElement('div'); n.className = 'none'; n.textContent = G.tab === 'caught' ? '이번 판에서 잡은 단어가 여기에 모여요.' : '놓친 단어가 없어요. 훌륭해요!'; box.appendChild(n); return; }
+  list.forEach(e => {
+    const b = document.createElement('button'); b.className = 'chip' + (G.tab === 'missed' ? ' miss' : '') + (G.shown === e ? ' on' : '');
+    b.textContent = e.w; b.dataset.w = e.w; b.setAttribute('lang', G.lang);
+    b.addEventListener('click', () => { renderCard(e, true); if (G.state === 'play') input.focus(); });
+    box.appendChild(b);
+  });
+}
+function renderDex(){
+  const n = DB.dex[G.lang].length, total = WORDS[G.lang].length;
+  $('#dexTop').textContent = n; $('#dexTopTotal').textContent = '/ ' + total;
+  $('#dexNum').textContent = `${n} / ${total}`; $('#dexLbl').textContent = (G.lang === 'en' ? 'English' : '한국어') + ' 도감';
+  $('#dexBar').style.width = (n / total * 100) + '%';
+}
+
+/* init */
+renderHearts(); renderHud(); setLang(G.lang); fetchScores();
+setTimeout(() => (nameInput.value ? $('#startBtn') : nameInput).focus(), 0);
+window.__WD = { G, WORDS, cartoon };
+})();
+</script>
+</body>
+</html>

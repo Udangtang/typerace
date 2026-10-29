@@ -1,0 +1,10 @@
+{
+  "name": "word-drop",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "떨어지는 단어를 타이핑하는 한국어·영어 어휘 게임 (공용 랭킹 보드)",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.7"
+  }
+}
